@@ -1,0 +1,27 @@
+[package]
+name = "nucleid"
+version = "0.1.0"
+authors = ["Maxime Ripard <maxime@cerno.tech>"]
+description = "Linux KMS abstraction library"
+edition = "2018"
+readme = "README.md"
+license-file = "LICENSE"
+keywords = ["linux", "graphics", "kms"]
+categories = ["api-bindings", "graphics", "os::linux-apis"]
+repository = "https://github.com/mripard/nucleid/"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cvt = "^0.1"
+fixed = "^1.6"
+libc = "^0.2"
+memmap = { package = "memmap2", version = "^0.2" }
+num_enum = { version = "^0.4", features = ["complex-expressions"] }
+thiserror = "^1.0"
+vmm-sys-util = "^0.5"
+
+[dev-dependencies]
+anyhow = "^1.0"
+clap = "^2.33"
+image = "^0.23"
