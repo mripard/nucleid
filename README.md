@@ -16,3 +16,15 @@ fn main() {
         .unwrap();
 }
 ```
+
+# To-Do List
+
+ - [ ] Review all the unwrap() calls to either get rid of them or annotate them with a comment
+ - [ ] Go through the doc and review the DRM vs KMS usage
+ - [ ] Get some larger review of the API
+ - [ ] Generate tests automatically to test the fourcc and DRM structure layouts
+ - [ ] Do some integration tests with VKMS
+ - [ ] Support test-only commits
+ - [ ] Support non-blocking commits
+ - [ ] Add some logging
+ - [ ] Do a C API?
