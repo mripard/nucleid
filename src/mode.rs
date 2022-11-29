@@ -16,6 +16,7 @@ pub enum Type {
 ///
 /// Contains the set of timings needed for a given display output
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Mode {
     name: String,
     inner: drm_mode_modeinfo,

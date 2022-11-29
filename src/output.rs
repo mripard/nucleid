@@ -14,6 +14,7 @@ use crate::{
 
 /// Display Pipeline Output Abstraction
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Output {
     dev: Weak<RefCell<Inner>>,
     connector: Rc<Connector>,

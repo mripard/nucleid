@@ -128,6 +128,7 @@ impl std::fmt::Display for Type {
 /// A connector is the abstraction for any display sinks, including some that might not have a
 /// physical connector, such as fixed panels.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Connector {
     dev: Weak<RefCell<Inner>>,
     id: u32,
