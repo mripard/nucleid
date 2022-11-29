@@ -397,6 +397,7 @@ impl Update {
 /// Used to update the state of any KMS Object
 pub trait ObjectUpdate {
     /// Adds a [Property](crate::Property) to the new state update  
+    #[must_use]
     fn set_property(self, property: &str, val: u64) -> Self;
 }
 
