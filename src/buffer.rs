@@ -38,7 +38,7 @@ pub struct Buffer {
     mapping: MmapMut,
 }
 
-impl<'a> Buffer {
+impl Buffer {
     pub(crate) fn new(device: &Device, width: usize, height: usize, bpp: usize) -> Result<Self> {
         let dumb = drm_mode_create_dumb_buffer(device, width, height, bpp)?;
         let map = drm_mode_map_dumb_buffer(device, dumb.handle)?;
