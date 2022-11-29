@@ -86,7 +86,7 @@ impl Buffer {
     /// ```
     #[must_use]
     pub fn data(&mut self) -> &mut [u8] {
-        &mut *self.mapping
+        &mut self.mapping
     }
 
     /// Returns the height, in lines
