@@ -4,8 +4,7 @@ use std::time;
 
 use anyhow::{Context, Result};
 
-use clap::App;
-use clap::Arg;
+use clap::{Arg, ArgAction, Command};
 use image::GenericImageView;
 
 use nucleid::{
@@ -24,18 +23,18 @@ struct Image {
 }
 
 fn main() -> Result<()> {
-    let matches = App::new("Kernel Mode Setting Image Viewer")
+    let matches = Command::new("Kernel Mode Setting Image Viewer")
         .arg(
-            Arg::with_name("device")
-                .short("D")
+            Arg::new("device")
+                .short('D')
                 .help("DRM Device Path")
                 .default_value("/dev/dri/card0"),
         )
-        .arg(Arg::with_name("images").multiple(true).required(true))
+        .arg(Arg::new("images").action(ArgAction::Append).required(true))
         .get_matches();
-    let dev_path = matches.value_of("device").unwrap();
+    let dev_path = matches.get_one::<String>("device").unwrap();
     let device = Device::new(dev_path).unwrap();
-    let img_path = matches.values_of("images").unwrap();
+    let img_path = matches.get_many::<String>("images").unwrap();
 
     let connector = device
         .connectors()
