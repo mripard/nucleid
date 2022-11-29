@@ -61,6 +61,10 @@ impl Output {
 
     /// Returns an iterator over the [Plane]s available
     ///
+    /// # Panics
+    ///
+    /// If the back-pointer to the DRM device isn't valid anymore.
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -227,6 +231,10 @@ impl Update {
     ///
     /// Will return [Error] if the [Device] can't be accessed, if the ioctl fails, or if the
     /// [Update] is rejected by the hardware.
+    ///
+    /// # Panics
+    ///
+    /// If the back-pointer to the DRM device isn't valid anymore.
     ///
     /// # Example
     ///

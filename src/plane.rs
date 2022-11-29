@@ -124,6 +124,10 @@ impl Plane {
 
     /// Returns the [Plane] [Type]
     ///
+    /// # Panics
+    ///
+    /// If the properties retrieval ioctl fails, or if the plane type property isn't found.
+    ///
     /// # Example
     ///
     /// ```no_run

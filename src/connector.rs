@@ -238,6 +238,10 @@ impl Connector {
     ///
     /// Will return [Error] if the [Device] can't be accessed or if the ioctl fails.
     ///
+    /// # Panics
+    ///
+    /// If the connection status cannot be decoded
+    ///
     /// # Example
     ///
     /// ```no_run
