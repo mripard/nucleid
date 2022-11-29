@@ -17,7 +17,7 @@ cvt = "^0.1"
 fixed = "^1.6"
 libc = "^0.2"
 memmap = { package = "memmap2", version = "^0.2" }
-num_enum = { version = "^0.4", features = ["complex-expressions"] }
+num_enum = { version = "^0.5", features = ["complex-expressions"] }
 thiserror = "^1.0"
 vmm-sys-util = "^0.11"
 
