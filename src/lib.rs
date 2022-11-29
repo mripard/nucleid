@@ -1,26 +1,8 @@
 // Copyright 2020-2021, Cerno
 // Licensed under the MIT License
 // See the LICENSE file or <http://opensource.org/licenses/MIT>
-//
-//! # Direct Rendering Manager (DRM) abstraction crate
-//!
-//! This library contains code to interact with a DRM device.
-//!
-//! This library is a work in progress: expect missing features and breaking changes.
-//!
-//! # Hello World
-//!
-//! ```no_run
-//! extern crate nucleid;
-//!
-//! use nucleid::Device;
-//!
-//! fn main() {
-//!     let device = Device::new("/dev/dri/card0")
-//!         .unwrap();
-//! }
-//! ```
 
+#![doc = include_str!("../README.md")]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
