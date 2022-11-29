@@ -22,6 +22,6 @@ thiserror = "1.0.0"
 vmm-sys-util = "0.11.0"
 
 [dev-dependencies]
-anyhow = "1.0.0"
+anyhow = "1.0.66"
 clap = "4.0.29"
 image = "0.23.0"
