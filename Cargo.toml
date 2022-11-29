@@ -19,7 +19,7 @@ libc = "^0.2"
 memmap = { package = "memmap2", version = "^0.2" }
 num_enum = { version = "^0.4", features = ["complex-expressions"] }
 thiserror = "^1.0"
-vmm-sys-util = "^0.5"
+vmm-sys-util = "^0.11"
 
 [dev-dependencies]
 anyhow = "^1.0"
