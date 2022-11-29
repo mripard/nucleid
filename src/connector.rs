@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// [Connector] Status
-#[derive(Clone, Copy, Debug, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Status {
     /// This [Connector] is connected to a sink and can be enabled
@@ -32,7 +32,7 @@ pub enum Status {
 }
 
 /// The [Connector] Type
-#[derive(Clone, Copy, Debug, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Type {
     /// The [Connector] type couldn't be determined
