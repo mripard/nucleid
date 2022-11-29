@@ -29,6 +29,7 @@
 #![deny(clippy::nursery)]
 #![deny(clippy::cargo)]
 #![allow(clippy::unreadable_literal)]
+#![allow(clippy::use_self)]
 
 #[macro_use]
 extern crate vmm_sys_util;
