@@ -2,6 +2,7 @@ use crate::{raw::drm_mode_get_property, Device, Result};
 
 /// A KMS property
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Property {
     object_id: u32,
     id: u32,

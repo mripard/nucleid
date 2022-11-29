@@ -393,7 +393,7 @@ pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsRawFd, handle: u32) {
     let fd = raw.as_raw_fd();
     let destroy = drm_mode_destroy_dumb { handle };
 
-    let _ = cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB(), &destroy) });
+    unsafe { ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB(), &destroy) };
 }
 
 pub fn drm_mode_get_encoder(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_get_encoder> {
@@ -505,7 +505,6 @@ pub fn drm_mode_get_planes(raw: &impl AsRawFd) -> Result<Vec<u32>> {
     cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES(), &mut count) })?;
 
     let mut plane_ids: Vec<u32> = Vec::with_capacity(count.count_planes as usize);
-    unsafe { plane_ids.set_len(count.count_planes as usize) };
 
     let mut resources = drm_mode_get_plane_res {
         count_planes: count.count_planes,
@@ -513,6 +512,8 @@ pub fn drm_mode_get_planes(raw: &impl AsRawFd) -> Result<Vec<u32>> {
     };
 
     cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES(), &mut resources) })?;
+
+    unsafe { plane_ids.set_len(count.count_planes as usize) };
 
     Ok(plane_ids)
 }
@@ -546,10 +547,7 @@ pub fn drm_mode_get_properties(
     cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES(), &mut count) })?;
 
     let mut prop_ids: Vec<u32> = Vec::with_capacity(count.count_props as usize);
-    unsafe { prop_ids.set_len(count.count_props as usize) };
-
     let mut prop_values: Vec<u64> = Vec::with_capacity(count.count_props as usize);
-    unsafe { prop_values.set_len(count.count_props as usize) };
 
     let mut properties = drm_mode_obj_get_properties {
         obj_type: object_type,
@@ -560,6 +558,9 @@ pub fn drm_mode_get_properties(
     };
 
     cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES(), &mut properties) })?;
+
+    unsafe { prop_ids.set_len(count.count_props as usize) };
+    unsafe { prop_values.set_len(count.count_props as usize) };
 
     Ok(prop_ids.into_iter().zip(prop_values.into_iter()).collect())
 }

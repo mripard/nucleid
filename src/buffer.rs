@@ -38,7 +38,7 @@ pub struct Buffer {
     mapping: MmapMut,
 }
 
-impl<'a> Buffer {
+impl Buffer {
     pub(crate) fn new(device: &Device, width: usize, height: usize, bpp: usize) -> Result<Self> {
         let dumb = drm_mode_create_dumb_buffer(device, width, height, bpp)?;
         let map = drm_mode_map_dumb_buffer(device, dumb.handle)?;
@@ -86,7 +86,7 @@ impl<'a> Buffer {
     /// ```
     #[must_use]
     pub fn data(&mut self) -> &mut [u8] {
-        &mut *self.mapping
+        &mut self.mapping
     }
 
     /// Returns the height, in lines

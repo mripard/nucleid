@@ -43,7 +43,7 @@ impl<'a> Iterator for Connectors<'a> {
         let child = self.inner.connectors.get(self.count);
         self.count += 1;
 
-        child.map(|item| Rc::clone(item))
+        child.map(Rc::clone)
     }
 }
 
@@ -60,7 +60,7 @@ impl<'a> Iterator for Crtcs<'a> {
         let child = self.inner.crtcs.get(self.count);
         self.count += 1;
 
-        child.map(|item| Rc::clone(item))
+        child.map(Rc::clone)
     }
 }
 
@@ -77,7 +77,7 @@ impl<'a> Iterator for Encoders<'a> {
         let child = self.inner.encoders.get(self.count);
         self.count += 1;
 
-        child.map(|item| Rc::clone(item))
+        child.map(Rc::clone)
     }
 }
 
@@ -94,7 +94,7 @@ impl<'a> Iterator for Planes<'a> {
         let child = self.inner.planes.get(self.count);
         self.count += 1;
 
-        child.map(|item| Rc::clone(item))
+        child.map(Rc::clone)
     }
 }
 

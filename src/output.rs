@@ -14,6 +14,7 @@ use crate::{
 
 /// Display Pipeline Output Abstraction
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Output {
     dev: Weak<RefCell<Inner>>,
     connector: Rc<Connector>,
@@ -59,6 +60,10 @@ impl Output {
     }
 
     /// Returns an iterator over the [Plane]s available
+    ///
+    /// # Panics
+    ///
+    /// If the back-pointer to the DRM device isn't valid anymore.
     ///
     /// # Example
     ///
@@ -227,6 +232,10 @@ impl Update {
     /// Will return [Error] if the [Device] can't be accessed, if the ioctl fails, or if the
     /// [Update] is rejected by the hardware.
     ///
+    /// # Panics
+    ///
+    /// If the back-pointer to the DRM device isn't valid anymore.
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -388,6 +397,7 @@ impl Update {
 /// Used to update the state of any KMS Object
 pub trait ObjectUpdate {
     /// Adds a [Property](crate::Property) to the new state update  
+    #[must_use]
     fn set_property(self, property: &str, val: u64) -> Self;
 }
 

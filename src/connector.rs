@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// [Connector] Status
-#[derive(Clone, Copy, Debug, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Status {
     /// This [Connector] is connected to a sink and can be enabled
@@ -32,7 +32,7 @@ pub enum Status {
 }
 
 /// The [Connector] Type
-#[derive(Clone, Copy, Debug, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Type {
     /// The [Connector] type couldn't be determined
@@ -128,6 +128,7 @@ impl std::fmt::Display for Type {
 /// A connector is the abstraction for any display sinks, including some that might not have a
 /// physical connector, such as fixed panels.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Connector {
     dev: Weak<RefCell<Inner>>,
     id: u32,
@@ -236,6 +237,10 @@ impl Connector {
     /// # Errors
     ///
     /// Will return [Error] if the [Device] can't be accessed or if the ioctl fails.
+    ///
+    /// # Panics
+    ///
+    /// If the connection status cannot be decoded
     ///
     /// # Example
     ///

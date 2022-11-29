@@ -11,6 +11,7 @@ use crate::{device::Inner, raw::drm_mode_get_encoder, Crtc, Device, Error};
 
 #[derive(Debug, TryFromPrimitive)]
 #[repr(u32)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Type {
     None,
     DAC,
@@ -23,6 +24,7 @@ pub enum Type {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Encoder {
     dev: Weak<RefCell<Inner>>,
     id: u32,

@@ -16,6 +16,7 @@ pub enum Type {
 ///
 /// Contains the set of timings needed for a given display output
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Mode {
     name: String,
     inner: drm_mode_modeinfo,
@@ -38,10 +39,10 @@ impl Mode {
             Type::Builtin => 1,
             Type::ClockC => (1 << 1) | 1,
             Type::CrtcC => (1 << 2) | 1,
-            Type::Preferred => (1 << 3),
-            Type::Default => (1 << 4),
-            Type::UserDef => (1 << 5),
-            Type::Driver => (1 << 6),
+            Type::Preferred => 1 << 3,
+            Type::Default => 1 << 4,
+            Type::UserDef => 1 << 5,
+            Type::Driver => 1 << 6,
         };
 
         (mode_type & mask) == mask

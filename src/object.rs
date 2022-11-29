@@ -30,7 +30,7 @@ pub trait Object {
         for (prop_id, prop_value) in properties {
             let property = Property::new(&dev, object_id, prop_id, prop_value)?;
 
-            ret.push(property)
+            ret.push(property);
         }
 
         Ok(ret)
