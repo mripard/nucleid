@@ -5,7 +5,6 @@ use std::time;
 use anyhow::{Context, Result};
 
 use clap::{Arg, ArgAction, Command};
-use image::GenericImageView;
 
 use nucleid::{
     BufferType, ConnectorStatus, ConnectorUpdate, Device, Format, Framebuffer, ObjectUpdate,
@@ -62,7 +61,7 @@ fn main() -> Result<()> {
     let images: Vec<Image> = img_path
         .map(|path| {
             let img = image::open(path).unwrap();
-            let rgb_data = img.to_bgra8().into_vec();
+            let rgb_data = img.to_rgba8().into_vec();
 
             let img_h = img.height().try_into().unwrap();
             let img_w = img.width().try_into().unwrap();
