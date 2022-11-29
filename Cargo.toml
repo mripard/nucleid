@@ -23,5 +23,5 @@ vmm-sys-util = "^0.5"
 
 [dev-dependencies]
 anyhow = "^1.0"
-clap = "^2.33"
+clap = "^4.0"
 image = "^0.23"
