@@ -393,7 +393,7 @@ pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsRawFd, handle: u32) {
     let fd = raw.as_raw_fd();
     let destroy = drm_mode_destroy_dumb { handle };
 
-    let _ = cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB(), &destroy) });
+    unsafe { ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB(), &destroy) };
 }
 
 pub fn drm_mode_get_encoder(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_get_encoder> {
