@@ -231,7 +231,7 @@ impl Drop for Buffer {
     fn drop(&mut self) {
         let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
 
-        drm_mode_destroy_dumb_buffer(&device, self.handle);
+        let _res = drm_mode_destroy_dumb_buffer(&device, self.handle);
     }
 }
 
@@ -282,6 +282,6 @@ impl Drop for Framebuffer {
     fn drop(&mut self) {
         let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
 
-        drm_mode_remove_framebuffer(&device, self.id);
+        let _res = drm_mode_remove_framebuffer(&device, self.id);
     }
 }
