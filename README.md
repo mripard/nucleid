@@ -1,7 +1,7 @@
 # Kernel Mode-Setting (KMS) abstraction crate
 
 This library contains code to interact with a DRM/KMS device.
- 
+
 This library is a work in progress: expect missing features and breaking changes.
 
 ## Hello World
@@ -19,7 +19,7 @@ fn main() {
 
 ## To-Do List
 
-- [ ] Migrate to nix
+- [x] Migrate to nix
 - [ ] Support Framebuffer format modifiers
 - [ ] Support buffer import through dma-buf
 - [ ] Review all the unwrap() calls to either get rid of them or annotate them

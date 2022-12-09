@@ -1,12 +1,26 @@
 use std::{convert::TryInto, os::unix::io::AsRawFd};
 
-use cvt::cvt_r;
-use libc::ioctl;
-use vmm_sys_util::ioctl_iowr_nr;
+use nix::{ioctl_readwrite, ioctl_write_ptr};
 
 use crate::Result;
 
 const DRM_IOCTL_BASE: u32 = 'd' as u32;
+const DRM_IOCTL_SET_CLIENT_CAP: u32 = 0x0d;
+const DRM_IOCTL_MODE_GETRESOURCES: u32 = 0xa0;
+const DRM_IOCTL_MODE_GETCRTC: u32 = 0xa1;
+const DRM_IOCTL_MODE_GETENCODER: u32 = 0xa6;
+const DRM_IOCTL_MODE_GETCONNECTOR: u32 = 0xa7;
+const DRM_IOCTL_MODE_GETPROPERTY: u32 = 0xaa;
+const DRM_IOCTL_MODE_RMFB: u32 = 0xaf;
+const DRM_IOCTL_MODE_CREATE_DUMB: u32 = 0xb2;
+const DRM_IOCTL_MODE_MAP_DUMB: u32 = 0xb3;
+const DRM_IOCTL_MODE_DESTROY_DUMB: u32 = 0xb4;
+const DRM_IOCTL_MODE_GETPLANERESOURCES: u32 = 0xb5;
+const DRM_IOCTL_MODE_GETPLANE: u32 = 0xb6;
+const DRM_IOCTL_MODE_ADDFB2: u32 = 0xb8;
+const DRM_IOCTL_MODE_OBJ_GETPROPERTIES: u32 = 0xb9;
+const DRM_IOCTL_MODE_ATOMIC: u32 = 0xbc;
+const DRM_IOCTL_MODE_CREATEPROPBLOB: u32 = 0xbd;
 
 #[derive(Clone, Copy, Debug, Default)]
 #[repr(C)]
@@ -33,10 +47,11 @@ pub struct drm_set_client_cap {
     pub capability: u64,
     pub value: u64,
 }
-ioctl_iow_nr!(
-    DRM_IOCTL_SET_CLIENT_CAP,
+
+ioctl_write_ptr!(
+    drm_ioctl_set_client_cap,
     DRM_IOCTL_BASE,
-    0x0d,
+    DRM_IOCTL_SET_CLIENT_CAP,
     drm_set_client_cap
 );
 
@@ -56,10 +71,11 @@ pub struct drm_mode_card_res {
     pub min_height: u32,
     pub max_height: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETRESOURCES,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getresources,
     DRM_IOCTL_BASE,
-    0xa0,
+    DRM_IOCTL_MODE_GETRESOURCES,
     drm_mode_card_res
 );
 
@@ -76,8 +92,13 @@ pub struct drm_mode_crtc {
     pub mode_valid: u32,
     pub mode: drm_mode_modeinfo,
 }
-ioctl_iowr_nr!(DRM_IOCTL_MODE_GETCRTC, DRM_IOCTL_BASE, 0xa1, drm_mode_crtc);
-ioctl_iowr_nr!(DRM_IOCTL_MODE_SETCRTC, DRM_IOCTL_BASE, 0xa2, drm_mode_crtc);
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getcrtc,
+    DRM_IOCTL_BASE,
+    DRM_IOCTL_MODE_GETCRTC,
+    drm_mode_crtc
+);
 
 #[derive(Debug, Default)]
 #[repr(C)]
@@ -88,10 +109,11 @@ pub struct drm_mode_get_encoder {
     pub possible_crtcs: u32,
     pub possible_clones: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETENCODER,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getencoder,
     DRM_IOCTL_BASE,
-    0xa6,
+    DRM_IOCTL_MODE_GETENCODER,
     drm_mode_get_encoder
 );
 
@@ -116,10 +138,11 @@ pub struct drm_mode_get_connector {
 
     pub _pad: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETCONNECTOR,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getconnector,
     DRM_IOCTL_BASE,
-    0xa7,
+    DRM_IOCTL_MODE_GETCONNECTOR,
     drm_mode_get_connector
 );
 
@@ -134,14 +157,20 @@ pub struct drm_mode_get_property {
     pub count_values: u32,
     pub count_enum_blobs: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETPROPERTY,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getproperty,
     DRM_IOCTL_BASE,
-    0xaa,
+    DRM_IOCTL_MODE_GETPROPERTY,
     drm_mode_get_property
 );
 
-ioctl_iowr_nr!(DRM_IOCTL_MODE_RMFB, DRM_IOCTL_BASE, 0xaf, libc::c_uint);
+ioctl_readwrite!(
+    drm_ioctl_mode_rmfb,
+    DRM_IOCTL_BASE,
+    DRM_IOCTL_MODE_RMFB,
+    libc::c_uint
+);
 
 #[derive(Default)]
 #[repr(C)]
@@ -152,12 +181,6 @@ pub struct drm_mode_crtc_page_flip {
     pub reserved: u32,
     pub user_data: u64,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_PAGE_FLIP,
-    DRM_IOCTL_BASE,
-    0xb0,
-    drm_mode_crtc_page_flip
-);
 
 #[derive(Debug, Default)]
 #[repr(C)]
@@ -170,10 +193,11 @@ pub struct drm_mode_create_dumb {
     pub pitch: u32,
     pub size: u64,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_CREATE_DUMB,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_create_dumb,
     DRM_IOCTL_BASE,
-    0xb2,
+    DRM_IOCTL_MODE_CREATE_DUMB,
     drm_mode_create_dumb
 );
 
@@ -184,10 +208,11 @@ pub struct drm_mode_map_dumb {
     pub pad: u32,
     pub offset: u64,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_MAP_DUMB,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_map_dump,
     DRM_IOCTL_BASE,
-    0xb3,
+    DRM_IOCTL_MODE_MAP_DUMB,
     drm_mode_map_dumb
 );
 
@@ -196,10 +221,11 @@ ioctl_iowr_nr!(
 pub struct drm_mode_destroy_dumb {
     pub handle: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_DESTROY_DUMB,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_destroy_dumb,
     DRM_IOCTL_BASE,
-    0xb4,
+    DRM_IOCTL_MODE_DESTROY_DUMB,
     drm_mode_destroy_dumb
 );
 
@@ -209,10 +235,11 @@ pub struct drm_mode_get_plane_res {
     pub plane_id_ptr: u64,
     pub count_planes: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETPLANERESOURCES,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getplaneresources,
     DRM_IOCTL_BASE,
-    0xb5,
+    DRM_IOCTL_MODE_GETPLANERESOURCES,
     drm_mode_get_plane_res
 );
 
@@ -227,10 +254,11 @@ pub struct drm_mode_get_plane {
     pub count_format_types: u32,
     pub format_type_ptr: u64,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_GETPLANE,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_getplane,
     DRM_IOCTL_BASE,
-    0xb6,
+    DRM_IOCTL_MODE_GETPLANE,
     drm_mode_get_plane
 );
 
@@ -247,10 +275,11 @@ pub struct drm_mode_fb_cmd2 {
     pub offsets: [u32; 4],
     pub modifier: [u64; 4],
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_ADDFB2,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_addfb2,
     DRM_IOCTL_BASE,
-    0xb8,
+    DRM_IOCTL_MODE_ADDFB2,
     drm_mode_fb_cmd2
 );
 
@@ -263,10 +292,11 @@ pub struct drm_mode_obj_get_properties {
     obj_id: u32,
     obj_type: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_OBJ_GETPROPERTIES,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_obj_getproperties,
     DRM_IOCTL_BASE,
-    0xb9,
+    DRM_IOCTL_MODE_OBJ_GETPROPERTIES,
     drm_mode_obj_get_properties
 );
 
@@ -282,7 +312,13 @@ pub struct drm_mode_atomic {
     reserved: u64,
     pub user_data: u64,
 }
-ioctl_iowr_nr!(DRM_IOCTL_MODE_ATOMIC, DRM_IOCTL_BASE, 0xbc, drm_mode_atomic);
+
+ioctl_readwrite!(
+    drm_ioctl_mode_atomic,
+    DRM_IOCTL_BASE,
+    DRM_IOCTL_MODE_ATOMIC,
+    drm_mode_atomic
+);
 
 #[derive(Default)]
 #[repr(C)]
@@ -291,10 +327,11 @@ pub struct drm_mode_create_blob {
     pub length: u32,
     pub blob_id: u32,
 }
-ioctl_iowr_nr!(
-    DRM_IOCTL_MODE_CREATEPROPBLOB,
+
+ioctl_readwrite!(
+    drm_ioctl_mode_createpropblob,
     DRM_IOCTL_BASE,
-    0xbd,
+    DRM_IOCTL_MODE_CREATEPROPBLOB,
     drm_mode_create_blob
 );
 
@@ -313,7 +350,7 @@ pub fn drm_mode_create_dumb_buffer(
         ..drm_mode_create_dumb::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_CREATE_DUMB(), &mut create) })?;
+    unsafe { drm_ioctl_mode_create_dumb(fd, &mut create) }?;
 
     Ok(create)
 }
@@ -337,7 +374,7 @@ pub fn drm_mode_add_framebuffer(
     fb.handles[0] = handle;
     fb.pitches[0] = pitch;
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_ADDFB2(), &mut fb) })?;
+    unsafe { drm_ioctl_mode_addfb2(fd, &mut fb) }?;
 
     Ok(fb.fb_id)
 }
@@ -351,7 +388,7 @@ pub fn drm_mode_atomic_commit(
 ) -> Result<()> {
     let fd = raw.as_raw_fd();
 
-    let atomic: drm_mode_atomic = drm_mode_atomic {
+    let mut atomic: drm_mode_atomic = drm_mode_atomic {
         flags: 0x0400,
         count_objs: objs_ptr.len().try_into()?,
         objs_ptr: objs_ptr.as_ptr() as u64,
@@ -362,7 +399,7 @@ pub fn drm_mode_atomic_commit(
         user_data: 0,
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_ATOMIC(), &atomic) })?;
+    unsafe { drm_ioctl_mode_atomic(fd, &mut atomic) }?;
 
     Ok(())
 }
@@ -376,24 +413,27 @@ pub fn drm_mode_create_property_blob<T: Sized>(raw: &impl AsRawFd, data: &T) -> 
         ..drm_mode_create_blob::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_CREATEPROPBLOB(), &mut blob) })?;
+    unsafe { drm_ioctl_mode_createpropblob(fd, &mut blob) }?;
 
     Ok(blob.blob_id)
 }
 
-pub fn drm_mode_remove_framebuffer(raw: &impl AsRawFd, id: u32) {
+pub fn drm_mode_remove_framebuffer(raw: &impl AsRawFd, id: u32) -> Result<()> {
     let fd = raw.as_raw_fd();
+    let mut fb_id = id;
 
-    unsafe {
-        ioctl(fd, DRM_IOCTL_MODE_RMFB(), &id);
-    }
+    unsafe { drm_ioctl_mode_rmfb(fd, &mut fb_id) }?;
+
+    Ok(())
 }
 
-pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsRawFd, handle: u32) {
+pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsRawFd, handle: u32) -> Result<()> {
     let fd = raw.as_raw_fd();
-    let destroy = drm_mode_destroy_dumb { handle };
+    let mut destroy = drm_mode_destroy_dumb { handle };
 
-    unsafe { ioctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB(), &destroy) };
+    unsafe { drm_ioctl_mode_destroy_dumb(fd, &mut destroy) }?;
+
+    Ok(())
 }
 
 pub fn drm_mode_get_encoder(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_get_encoder> {
@@ -404,7 +444,7 @@ pub fn drm_mode_get_encoder(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_get_
         ..drm_mode_get_encoder::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETENCODER(), &mut encoder) })?;
+    unsafe { drm_ioctl_mode_getencoder(fd, &mut encoder) }?;
 
     Ok(encoder)
 }
@@ -422,7 +462,7 @@ pub fn drm_mode_get_connector(
         ..drm_mode_get_connector::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR(), &mut count) })?;
+    unsafe { drm_ioctl_mode_getconnector(fd, &mut count) }?;
 
     if modes.is_none() && encoders.is_none() {
         return Ok(count);
@@ -447,7 +487,7 @@ pub fn drm_mode_get_connector(
         conn.encoders_ptr = enc_ids.as_mut_ptr() as u64;
     }
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR(), &mut conn) })?;
+    unsafe { drm_ioctl_mode_getconnector(fd, &mut conn) }?;
 
     Ok(conn)
 }
@@ -460,7 +500,7 @@ pub fn drm_mode_get_crtc(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_crtc> {
         ..drm_mode_crtc::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETCRTC(), &mut crtc) })?;
+    unsafe { drm_ioctl_mode_getcrtc(fd, &mut crtc) }?;
 
     Ok(crtc)
 }
@@ -477,7 +517,7 @@ pub fn drm_mode_get_plane(
         ..drm_mode_get_plane::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANE(), &mut count) })?;
+    unsafe { drm_ioctl_mode_getplane(fd, &mut count) }?;
 
     if let Some(formats) = formats {
         formats.resize_with(count.count_format_types as usize, Default::default);
@@ -490,7 +530,7 @@ pub fn drm_mode_get_plane(
             ..drm_mode_get_plane::default()
         };
 
-        cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANE(), &mut plane) })?;
+        unsafe { drm_ioctl_mode_getplane(fd, &mut plane) }?;
 
         Ok(plane)
     } else {
@@ -502,7 +542,8 @@ pub fn drm_mode_get_planes(raw: &impl AsRawFd) -> Result<Vec<u32>> {
     let fd = raw.as_raw_fd();
 
     let mut count = drm_mode_get_plane_res::default();
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES(), &mut count) })?;
+
+    unsafe { drm_ioctl_mode_getplaneresources(fd, &mut count) }?;
 
     let mut plane_ids: Vec<u32> = Vec::with_capacity(count.count_planes as usize);
 
@@ -511,7 +552,7 @@ pub fn drm_mode_get_planes(raw: &impl AsRawFd) -> Result<Vec<u32>> {
         plane_id_ptr: plane_ids.as_mut_ptr() as u64,
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES(), &mut resources) })?;
+    unsafe { drm_ioctl_mode_getplaneresources(fd, &mut resources) }?;
 
     unsafe { plane_ids.set_len(count.count_planes as usize) };
 
@@ -526,7 +567,7 @@ pub fn drm_mode_get_property(raw: &impl AsRawFd, id: u32) -> Result<drm_mode_get
         ..drm_mode_get_property::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETPROPERTY(), &mut count) })?;
+    unsafe { drm_ioctl_mode_getproperty(fd, &mut count) }?;
 
     Ok(count)
 }
@@ -544,7 +585,7 @@ pub fn drm_mode_get_properties(
         ..drm_mode_obj_get_properties::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES(), &mut count) })?;
+    unsafe { drm_ioctl_mode_obj_getproperties(fd, &mut count) }?;
 
     let mut prop_ids: Vec<u32> = Vec::with_capacity(count.count_props as usize);
     let mut prop_values: Vec<u64> = Vec::with_capacity(count.count_props as usize);
@@ -557,7 +598,7 @@ pub fn drm_mode_get_properties(
         prop_values_ptr: prop_values.as_mut_ptr() as u64,
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES(), &mut properties) })?;
+    unsafe { drm_ioctl_mode_obj_getproperties(fd, &mut properties) }?;
 
     unsafe { prop_ids.set_len(count.count_props as usize) };
     unsafe { prop_values.set_len(count.count_props as usize) };
@@ -574,7 +615,8 @@ pub fn drm_mode_get_resources(
     let fd = raw.as_raw_fd();
 
     let mut count = drm_mode_card_res::default();
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES(), &mut count) })?;
+
+    unsafe { drm_ioctl_mode_getresources(fd, &mut count) }?;
 
     if crtc_ids.is_none() && encoder_ids.is_none() && connector_ids.is_none() {
         return Ok(count);
@@ -603,7 +645,7 @@ pub fn drm_mode_get_resources(
         resources.connector_id_ptr = connectors.as_mut_ptr() as u64;
     }
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES(), &mut resources) })?;
+    unsafe { drm_ioctl_mode_getresources(fd, &mut resources) }?;
 
     Ok(resources)
 }
@@ -616,7 +658,7 @@ pub fn drm_mode_map_dumb_buffer(raw: &impl AsRawFd, handle: u32) -> Result<drm_m
         ..drm_mode_map_dumb::default()
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_MODE_MAP_DUMB(), &mut map) })?;
+    unsafe { drm_ioctl_mode_map_dump(fd, &mut map) }?;
 
     Ok(map)
 }
@@ -628,7 +670,7 @@ pub fn drm_set_client_capability(raw: &impl AsRawFd, cap: u64) -> Result<()> {
         value: 1,
     };
 
-    cvt_r(|| unsafe { ioctl(fd, DRM_IOCTL_SET_CLIENT_CAP(), &caps) })?;
+    unsafe { drm_ioctl_set_client_cap(fd, &caps) }?;
 
     Ok(())
 }
