@@ -302,7 +302,7 @@ impl Update {
         if let Some(connector) = self.connector {
             let crtc_prop_id = connector.connector.property_id("CRTC_ID").unwrap();
             properties.push((
-                connector.connector.object_id() as u32,
+                connector.connector.object_id(),
                 crtc_prop_id,
                 u64::from(crtc_object_id),
             ));
