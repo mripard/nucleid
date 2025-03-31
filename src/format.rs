@@ -10,6 +10,9 @@ macro_rules! fourcc_code {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Format {
+    /// \[23:0\] B:G:R little endian
+    BGR888 = fourcc_code!('B', 'G', '2', '4'),
+
     /// \[23:0\] R:G:B 8:8:8 little endian
     RGB888 = fourcc_code!('R', 'G', '2', '4'),
 
