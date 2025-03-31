@@ -13,7 +13,7 @@ repository = "https://github.com/mripard/nucleid/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-fixed = "1.20.0"
+fixed = "~1.20.0"
 libc = "0.2.137"
 memmap = { package = "memmap2", version = "0.5.8" }
 nix = "0.26.1"
