@@ -344,9 +344,9 @@ pub fn drm_mode_create_dumb_buffer(
     let fd = raw.as_raw_fd();
 
     let mut create = drm_mode_create_dumb {
-        width: width,
-        height: height,
-        bpp: bpp,
+        height,
+        width,
+        bpp,
         ..drm_mode_create_dumb::default()
     };
 

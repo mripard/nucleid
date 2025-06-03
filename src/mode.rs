@@ -97,7 +97,7 @@ impl Mode {
     /// ```
     #[must_use]
     pub const fn refresh(&self) -> u32 {
-        self.inner.vrefresh as u32
+        self.inner.vrefresh
     }
 
     /// Returns the active horizontal size in pixels
