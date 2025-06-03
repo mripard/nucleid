@@ -267,9 +267,9 @@ impl Device {
     pub fn allocate_buffer(
         &self,
         buftype: BufferType,
-        width: usize,
-        height: usize,
-        bpp: usize,
+        width: u32,
+        height: u32,
+        bpp: u32,
     ) -> Result<Buffer> {
         let raw = match buftype {
             BufferType::Dumb => Buffer::new(self, width, height, bpp)?,

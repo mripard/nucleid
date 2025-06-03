@@ -13,12 +13,12 @@ use nucleid::{
 
 struct Image {
     buffer: Framebuffer,
-    image_w: usize,
-    image_h: usize,
-    display_w: usize,
-    display_h: usize,
-    margin_w: usize,
-    margin_h: usize,
+    image_w: u32,
+    image_h: u32,
+    display_w: u16,
+    display_h: u16,
+    margin_w: u16,
+    margin_h: u16,
 }
 
 fn main() -> Result<()> {
@@ -74,8 +74,8 @@ fn main() -> Result<()> {
             let data = buffer.data();
             data.copy_from_slice(&rgb_data);
 
-            let scale_h = mode.height() as f32 / img_h as f32;
-            let scale_w = mode.width() as f32 / img_w as f32;
+            let scale_h = f32::from(mode.height()) / img_h as f32;
+            let scale_w = f32::from(mode.width()) / img_w as f32;
             let scale = scale_h
                 .partial_cmp(&scale_w)
                 .map(|ord| match ord {
@@ -87,11 +87,11 @@ fn main() -> Result<()> {
             let image_h = img_h;
             let image_w = img_w;
 
-            let display_h = ((img_h as f32) * scale).ceil() as usize;
-            let display_w = ((img_w as f32) * scale).ceil() as usize;
+            let display_h = ((img_h as f32) * scale).ceil() as u16;
+            let display_w = ((img_w as f32) * scale).ceil() as u16;
 
-            let margin_h = ((mode.height() - display_h) / 2) as usize;
-            let margin_w = ((mode.width() - display_w) / 2) as usize;
+            let margin_h = (mode.height() - display_h) / 2;
+            let margin_w = (mode.width() - display_w) / 2;
 
             Image {
                 buffer,
@@ -121,8 +121,8 @@ fn main() -> Result<()> {
                 .set_framebuffer(&first.buffer)
                 .set_source_size(first.image_w as f32, first.image_h as f32)
                 .set_source_coordinates(0.0, 0.0)
-                .set_display_size(first.display_w, first.display_h)
-                .set_display_coordinates(first.margin_w, first.margin_h),
+                .set_display_size(first.display_w.into(), first.display_h.into())
+                .set_display_coordinates(first.margin_w.into(), first.margin_h.into()),
         )
         .commit()?;
 
@@ -140,8 +140,8 @@ fn main() -> Result<()> {
                     .set_framebuffer(&image.buffer)
                     .set_source_size(image.image_w as f32, image.image_h as f32)
                     .set_source_coordinates(0.0, 0.0)
-                    .set_display_size(image.display_w, image.display_h)
-                    .set_display_coordinates(image.margin_w, image.margin_h),
+                    .set_display_size(image.display_w.into(), image.display_h.into())
+                    .set_display_coordinates(image.margin_w.into(), image.margin_h.into()),
             )
             .commit()?;
 

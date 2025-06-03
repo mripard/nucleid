@@ -72,8 +72,8 @@ impl Mode {
     ///     .unwrap();
     /// ```
     #[must_use]
-    pub const fn height(&self) -> usize {
-        self.inner.vdisplay as usize
+    pub const fn height(&self) -> u16 {
+        self.inner.vdisplay
     }
 
     /// Returns the vertical refresh rate, in Hertz
@@ -96,8 +96,8 @@ impl Mode {
     ///     .unwrap();
     /// ```
     #[must_use]
-    pub const fn refresh(&self) -> usize {
-        self.inner.vrefresh as usize
+    pub const fn refresh(&self) -> u32 {
+        self.inner.vrefresh as u32
     }
 
     /// Returns the active horizontal size in pixels
@@ -120,7 +120,7 @@ impl Mode {
     ///     .unwrap();
     /// ```
     #[must_use]
-    pub const fn width(&self) -> usize {
-        self.inner.hdisplay as usize
+    pub const fn width(&self) -> u16 {
+        self.inner.hdisplay
     }
 }

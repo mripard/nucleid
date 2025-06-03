@@ -337,16 +337,16 @@ ioctl_readwrite!(
 
 pub fn drm_mode_create_dumb_buffer(
     raw: &impl AsRawFd,
-    width: usize,
-    height: usize,
-    bpp: usize,
+    width: u32,
+    height: u32,
+    bpp: u32,
 ) -> Result<drm_mode_create_dumb> {
     let fd = raw.as_raw_fd();
 
     let mut create = drm_mode_create_dumb {
-        width: width.try_into()?,
-        height: height.try_into()?,
-        bpp: bpp.try_into()?,
+        width: width,
+        height: height,
+        bpp: bpp,
         ..drm_mode_create_dumb::default()
     };
 

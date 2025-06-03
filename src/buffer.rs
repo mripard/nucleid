@@ -30,16 +30,16 @@ pub enum Type {
 /// [Framebuffer] before being sent to the Device
 pub struct Buffer {
     dev: Weak<RefCell<Inner>>,
-    width: usize,
-    height: usize,
-    pitch: usize,
-    size: usize,
+    width: u32,
+    height: u32,
+    pitch: u32,
+    size: u64,
     handle: u32,
     mapping: MmapMut,
 }
 
 impl Buffer {
-    pub(crate) fn new(device: &Device, width: usize, height: usize, bpp: usize) -> Result<Self> {
+    pub(crate) fn new(device: &Device, width: u32, height: u32, bpp: u32) -> Result<Self> {
         let dumb = drm_mode_create_dumb_buffer(device, width, height, bpp)?;
         let map = drm_mode_map_dumb_buffer(device, dumb.handle)?;
 
@@ -58,10 +58,10 @@ impl Buffer {
         Ok(Self {
             dev: Rc::downgrade(&device.inner),
 
-            width: dumb.width as usize,
-            height: dumb.height as usize,
-            pitch: dumb.pitch as usize,
-            size,
+            width: dumb.width,
+            height: dumb.height,
+            pitch: dumb.pitch,
+            size: dumb.size,
 
             handle: dumb.handle,
             mapping: map,
@@ -109,7 +109,7 @@ impl Buffer {
     /// assert!(buffer.height() >= 480)
     /// ```
     #[must_use]
-    pub const fn height(&self) -> usize {
+    pub const fn height(&self) -> u32 {
         self.height
     }
 
@@ -133,7 +133,7 @@ impl Buffer {
     /// assert!(buffer.width() >= 640)
     /// ```
     #[must_use]
-    pub const fn width(&self) -> usize {
+    pub const fn width(&self) -> u32 {
         self.width
     }
 
@@ -157,7 +157,7 @@ impl Buffer {
     /// assert!(buffer.pitch() >= (640 * 32))
     /// ```
     #[must_use]
-    pub const fn pitch(&self) -> usize {
+    pub const fn pitch(&self) -> u32 {
         self.pitch
     }
 
@@ -181,7 +181,7 @@ impl Buffer {
     /// assert!(buffer.size() >= (640 * 480 * 32))
     /// ```
     #[must_use]
-    pub const fn size(&self) -> usize {
+    pub const fn size(&self) -> u64 {
         self.size
     }
 
@@ -213,9 +213,9 @@ impl Buffer {
         let id = drm_mode_add_framebuffer(
             &device,
             self.handle,
-            self.width.try_into()?,
-            self.pitch.try_into()?,
-            self.height.try_into()?,
+            self.width,
+            self.pitch,
+            self.height,
             fmt as u32,
         )?;
 
