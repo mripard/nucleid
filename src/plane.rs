@@ -176,7 +176,7 @@ pub struct Formats<'a> {
     iter: std::slice::Iter<'a, Format>,
 }
 
-impl<'a> Iterator for Formats<'a> {
+impl Iterator for Formats<'_> {
     type Item = Format;
 
     fn next(&mut self) -> Option<Self::Item> {

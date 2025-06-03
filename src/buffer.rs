@@ -238,11 +238,12 @@ impl Drop for Buffer {
 impl std::fmt::Debug for Buffer {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fmt.debug_struct("Buffer")
+            .field("handle", &self.handle)
             .field("width", &self.width)
             .field("height", &self.height)
             .field("pitch", &self.pitch)
             .field("size", &self.size)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

@@ -37,7 +37,6 @@ fn main() -> Result<()> {
 
     let connector = device
         .connectors()
-        .into_iter()
         .find(|con| con.status().unwrap_or(ConnectorStatus::Unknown) == ConnectorStatus::Connected)
         .context("No Active Connector")?;
 

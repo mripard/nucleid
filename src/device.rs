@@ -36,7 +36,7 @@ pub struct Connectors<'a> {
     count: usize,
 }
 
-impl<'a> Iterator for Connectors<'a> {
+impl Iterator for Connectors<'_> {
     type Item = Rc<Connector>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -53,7 +53,7 @@ pub struct Crtcs<'a> {
     count: usize,
 }
 
-impl<'a> Iterator for Crtcs<'a> {
+impl Iterator for Crtcs<'_> {
     type Item = Rc<Crtc>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -70,7 +70,7 @@ pub struct Encoders<'a> {
     count: usize,
 }
 
-impl<'a> Iterator for Encoders<'a> {
+impl Iterator for Encoders<'_> {
     type Item = Rc<Encoder>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -87,7 +87,7 @@ pub struct Planes<'a> {
     count: usize,
 }
 
-impl<'a> Iterator for Planes<'a> {
+impl Iterator for Planes<'_> {
     type Item = Rc<Plane>;
 
     fn next(&mut self) -> Option<Self::Item> {

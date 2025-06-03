@@ -65,7 +65,7 @@ pub enum Type {
     /// A mini-Din-9 [Connector]
     MiniDin9,
 
-    /// A DisplayPort [Connector]
+    /// A `DisplayPort` [Connector]
     DisplayPort,
 
     /// An HDMI-A [Connector]
@@ -77,7 +77,7 @@ pub enum Type {
     /// A TV [Connector]
     TV,
 
-    /// An embedded DisplayPort [Connector]
+    /// An embedded `DisplayPort` [Connector]
     EDP,
 
     /// A Virtual [Connector]

@@ -409,7 +409,7 @@ pub fn drm_mode_create_property_blob<T: Sized>(raw: &impl AsRawFd, data: &T) -> 
 
     let mut blob = drm_mode_create_blob {
         length: std::mem::size_of::<T>().try_into()?,
-        data: (data as *const T) as u64,
+        data: std::ptr::from_ref::<T>(data) as u64,
         ..drm_mode_create_blob::default()
     };
 
@@ -603,7 +603,7 @@ pub fn drm_mode_get_properties(
     unsafe { prop_ids.set_len(count.count_props as usize) };
     unsafe { prop_values.set_len(count.count_props as usize) };
 
-    Ok(prop_ids.into_iter().zip(prop_values.into_iter()).collect())
+    Ok(prop_ids.into_iter().zip(prop_values).collect())
 }
 
 pub fn drm_mode_get_resources(

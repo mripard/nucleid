@@ -10,6 +10,7 @@
 #![deny(clippy::pedantic)]
 #![deny(clippy::nursery)]
 #![deny(clippy::cargo)]
+#![warn(clippy::multiple_crate_versions)]
 #![allow(clippy::unreadable_literal)]
 #![allow(clippy::use_self)]
 
