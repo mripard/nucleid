@@ -1,6 +1,7 @@
 use std::{
     cell::{Ref, RefCell},
     fs::{File, OpenOptions},
+    path::Path,
     rc::Rc,
 };
 
@@ -122,7 +123,10 @@ impl Device {
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     /// ```
-    pub fn new(path: &str) -> Result<Self> {
+    pub fn new<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
         let file = OpenOptions::new().read(true).write(true).open(path)?;
 
         drm_set_client_capability(&file, ClientCapability::Atomic as u64)?;
