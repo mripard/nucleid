@@ -12,7 +12,6 @@ repository = "https://github.com/mripard/nucleid/"
 
 [dependencies]
 fixed = { version = "1.29.0", default-features = false }
-libc = { version = "0.2.172", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
 nix = { version = "0.30.1", default-features = false, features = ["ioctl"] }
 num_enum = { version = "0.7.3", features = ["complex-expressions"] }

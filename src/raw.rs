@@ -1,4 +1,4 @@
-use std::{convert::TryInto, os::unix::io::AsRawFd};
+use std::{convert::TryInto, ffi::c_uint, os::unix::io::AsRawFd};
 
 use nix::{ioctl_readwrite, ioctl_write_ptr};
 
@@ -169,7 +169,7 @@ ioctl_readwrite!(
     drm_ioctl_mode_rmfb,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_RMFB,
-    libc::c_uint
+    c_uint
 );
 
 #[derive(Default)]
