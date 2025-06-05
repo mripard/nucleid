@@ -21,4 +21,8 @@ thiserror = { version = "2.0.12", default-features = false }
 [dev-dependencies]
 anyhow = { version = "1.0.98", default-features = false, features = ["std"] }
 clap = { version = "4.5.39", default-features = false, features = ["std"] }
-image = { version = "0.25.6", default-features = false, features = ["png", "jpeg", "webp"] }
+image = { version = "0.25.6", default-features = false, features = [
+    "png",
+    "jpeg",
+    "webp",
+] }
