@@ -4,10 +4,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Error Type for nucleid
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    /// An Error caused by a failed IOCTL
-    #[error("Ioctl Failure")]
-    Ioctl(#[from] nix::Error),
-
     /// An Error caused by I/O with the Device
     #[error("Couldn't access the DRM device")]
     Io(#[from] std::io::Error),

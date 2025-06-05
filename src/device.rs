@@ -1,6 +1,7 @@
 use std::{
     cell::{Ref, RefCell},
-    fs::{File, OpenOptions},
+    fs::OpenOptions,
+    os::fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd},
     path::Path,
     rc::Rc,
 };
@@ -24,7 +25,7 @@ enum ClientCapability {
 
 #[derive(Debug)]
 pub struct Inner {
-    pub(crate) file: File,
+    pub(crate) file: OwnedFd,
     crtcs: Vec<Rc<Crtc>>,
     encoders: Vec<Rc<Encoder>>,
     connectors: Vec<Rc<Connector>>,
@@ -144,7 +145,7 @@ impl Device {
 
         let device = Self {
             inner: Rc::new(RefCell::new(Inner {
-                file,
+                file: file.into(),
                 crtcs: Vec::new(),
                 encoders: Vec::new(),
                 connectors: Vec::new(),
@@ -312,6 +313,13 @@ impl Device {
         let crtc = encoder.crtcs()?.into_iter().next().ok_or(Error::Empty)?;
 
         Ok(Output::new(self, &crtc, &encoder, connector))
+    }
+}
+
+impl AsFd for Device {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        // SAFETY: We know that we will have the fd opened for at least as long as Device.
+        unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
     }
 }
 
