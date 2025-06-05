@@ -1,14 +1,14 @@
 use std::{
     cell::RefCell,
     convert::TryFrom,
+    io,
     rc::{Rc, Weak},
 };
 
 use crate::{
     device::Inner,
-    error::Result,
     raw::{drm_mode_encoder_type, drm_mode_get_encoder},
-    Crtc, Device, Error,
+    Crtc, Device,
 };
 
 #[derive(Debug)]
@@ -22,7 +22,7 @@ pub struct Encoder {
 }
 
 impl Encoder {
-    pub(crate) fn new(device: &Device, id: u32) -> Result<Self> {
+    pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let encoder = drm_mode_get_encoder(device, id)?;
         let encoder_type = drm_mode_encoder_type::try_from(encoder.encoder_type).unwrap();
 
@@ -39,8 +39,12 @@ impl Encoder {
         self.id
     }
 
-    pub fn crtcs(self: &Rc<Self>) -> Result<Crtcs> {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn crtcs(self: &Rc<Self>) -> io::Result<Crtcs> {
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let crtcs = device
             .crtcs()

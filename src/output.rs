@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     collections::HashMap,
+    io,
     rc::{Rc, Weak},
 };
 
@@ -8,8 +9,8 @@ use fixed::types::U16F16;
 
 use crate::{
     buffer::Framebuffer, device::Inner, encoder::Encoder, object::Object,
-    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device,
-    Error, Mode, Plane, Result,
+    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device, Mode,
+    Plane,
 };
 
 /// Display Pipeline Output Abstraction
@@ -91,7 +92,11 @@ impl Output {
     /// ```
     #[must_use]
     pub fn planes(&self) -> Planes {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
         let crtc_idx = self.crtc.index();
 
         let planes = device
@@ -270,8 +275,14 @@ impl Update {
     ///     .commit()
     ///     .unwrap();
     /// ```
-    pub fn commit(self) -> Result<Output> {
-        let device: Device = self.output.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn commit(self) -> io::Result<Output> {
+        let device: Device = self
+            .output
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
+
         let mut properties = Vec::new();
         let crtc_object_id = self.output.crtc.object_id();
 
@@ -284,7 +295,10 @@ impl Update {
             ));
 
             for (prop_name, prop_value) in plane.properties {
-                let prop_id = plane.plane.property_id(&prop_name).ok_or(Error::Empty)?;
+                let prop_id = plane.plane.property_id(&prop_name).ok_or(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "KMS Property Not Found for that object",
+                ))?;
 
                 properties.push((plane.plane.object_id(), prop_id, prop_value));
             }
@@ -311,7 +325,10 @@ impl Update {
                 let prop_id = connector
                     .connector
                     .property_id(&prop_name)
-                    .ok_or(Error::Empty)?;
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "KMS Property Not Found for that object",
+                    ))?;
 
                 properties.push((connector.connector.object_id(), prop_id, prop_value));
             }

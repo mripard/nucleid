@@ -11,7 +11,7 @@ use rustix::{
     ioctl::{ioctl, opcode, Setter, Updater},
 };
 
-use crate::{raw::bindgen::DRM_IOCTL_BASE, Result};
+use crate::raw::bindgen::DRM_IOCTL_BASE;
 
 pub(crate) mod bindgen {
     #![allow(dead_code)]
@@ -356,7 +356,7 @@ pub fn drm_mode_create_dumb_buffer(
     width: u32,
     height: u32,
     bpp: u32,
-) -> Result<drm_mode_create_dumb> {
+) -> io::Result<drm_mode_create_dumb> {
     Ok(drm_ioctl_mode_create_dumb(
         raw.as_fd(),
         drm_mode_create_dumb {
@@ -375,7 +375,7 @@ pub fn drm_mode_add_framebuffer(
     pitch: u32,
     height: u32,
     fmt: u32,
-) -> Result<u32> {
+) -> io::Result<u32> {
     let mut fb = drm_mode_fb_cmd2 {
         width,
         height,
@@ -385,9 +385,7 @@ pub fn drm_mode_add_framebuffer(
     fb.handles[0] = handle;
     fb.pitches[0] = pitch;
 
-    let fb = drm_ioctl_mode_addfb2(raw.as_fd(), fb)?;
-
-    Ok(fb.fb_id)
+    drm_ioctl_mode_addfb2(raw.as_fd(), fb).map(|fb| fb.fb_id)
 }
 
 pub fn drm_mode_atomic_commit(
@@ -396,12 +394,17 @@ pub fn drm_mode_atomic_commit(
     count_props_ptr: &[u32],
     props_ptr: &[u32],
     prop_values_ptr: &[u64],
-) -> Result<()> {
-    let _ = drm_ioctl_mode_atomic(
+) -> io::Result<()> {
+    drm_ioctl_mode_atomic(
         raw.as_fd(),
         drm_mode_atomic {
             flags: 0x0400,
-            count_objs: objs_ptr.len().try_into()?,
+            count_objs: objs_ptr.len().try_into().map_err(|_e| {
+                io::Error::new(
+                    io::ErrorKind::ArgumentListTooLong,
+                    "Too many objects passed",
+                )
+            })?,
             objs_ptr: objs_ptr.as_ptr() as u64,
             count_props_ptr: count_props_ptr.as_ptr() as u64,
             props_ptr: props_ptr.as_ptr() as u64,
@@ -409,46 +412,40 @@ pub fn drm_mode_atomic_commit(
             reserved: 0,
             user_data: 0,
         },
-    )?;
-
-    Ok(())
+    )
+    .map(|_v| ())
 }
 
-pub fn drm_mode_create_property_blob<T: Sized>(raw: &impl AsFd, data: &T) -> Result<u32> {
-    let fd = raw.as_fd();
-
-    let blob = drm_ioctl_mode_createpropblob(
-        fd,
+pub fn drm_mode_create_property_blob<T: Sized>(raw: &impl AsFd, data: &T) -> io::Result<u32> {
+    drm_ioctl_mode_createpropblob(
+        raw.as_fd(),
         drm_mode_create_blob {
-            length: std::mem::size_of::<T>().try_into()?,
+            length: std::mem::size_of::<T>()
+                .try_into()
+                .map_err(|_e| io::Error::new(io::ErrorKind::InvalidInput, "Blob is too large"))?,
             data: std::ptr::from_ref::<T>(data) as u64,
             ..drm_mode_create_blob::default()
         },
-    )?;
-
-    Ok(blob.blob_id)
+    )
+    .map(|blob| blob.blob_id)
 }
 
-pub fn drm_mode_remove_framebuffer(raw: &impl AsFd, id: u32) -> Result<()> {
-    let _ = drm_ioctl_mode_rmfb(raw.as_fd(), id)?;
-
-    Ok(())
+pub fn drm_mode_remove_framebuffer(raw: &impl AsFd, id: u32) -> io::Result<()> {
+    drm_ioctl_mode_rmfb(raw.as_fd(), id).map(|_v| ())
 }
 
-pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsFd, handle: u32) -> Result<()> {
-    let _ = drm_ioctl_mode_destroy_dumb(raw.as_fd(), drm_mode_destroy_dumb { handle })?;
-
-    Ok(())
+pub fn drm_mode_destroy_dumb_buffer(raw: &impl AsFd, handle: u32) -> io::Result<()> {
+    drm_ioctl_mode_destroy_dumb(raw.as_fd(), drm_mode_destroy_dumb { handle }).map(|_v| ())
 }
 
-pub fn drm_mode_get_encoder(raw: &impl AsFd, id: u32) -> Result<drm_mode_get_encoder> {
-    Ok(drm_ioctl_mode_getencoder(
+pub fn drm_mode_get_encoder(raw: &impl AsFd, id: u32) -> io::Result<drm_mode_get_encoder> {
+    drm_ioctl_mode_getencoder(
         raw.as_fd(),
         drm_mode_get_encoder {
             encoder_id: id,
             ..drm_mode_get_encoder::default()
         },
-    )?)
+    )
 }
 
 pub fn drm_mode_get_connector(
@@ -456,7 +453,7 @@ pub fn drm_mode_get_connector(
     id: u32,
     modes: Option<&mut Vec<drm_mode_modeinfo>>,
     encoders: Option<&mut Vec<u32>>,
-) -> Result<drm_mode_get_connector> {
+) -> io::Result<drm_mode_get_connector> {
     let fd = raw.as_fd();
 
     let count = drm_ioctl_mode_getconnector(
@@ -490,24 +487,24 @@ pub fn drm_mode_get_connector(
         conn.encoders_ptr = enc_ids.as_mut_ptr() as u64;
     }
 
-    Ok(drm_ioctl_mode_getconnector(fd, conn)?)
+    drm_ioctl_mode_getconnector(fd, conn)
 }
 
-pub fn drm_mode_get_crtc(raw: &impl AsFd, id: u32) -> Result<drm_mode_crtc> {
-    Ok(drm_ioctl_mode_getcrtc(
+pub fn drm_mode_get_crtc(raw: &impl AsFd, id: u32) -> io::Result<drm_mode_crtc> {
+    drm_ioctl_mode_getcrtc(
         raw.as_fd(),
         drm_mode_crtc {
             crtc_id: id,
             ..drm_mode_crtc::default()
         },
-    )?)
+    )
 }
 
 pub fn drm_mode_get_plane(
     raw: &impl AsFd,
     id: u32,
     formats: Option<&mut Vec<u32>>,
-) -> Result<drm_mode_get_plane> {
+) -> io::Result<drm_mode_get_plane> {
     let fd = raw.as_fd();
 
     let count = drm_ioctl_mode_getplane(
@@ -522,7 +519,7 @@ pub fn drm_mode_get_plane(
         formats.resize_with(count.count_format_types as usize, Default::default);
         unsafe { formats.set_len(count.count_format_types as usize) };
 
-        Ok(drm_ioctl_mode_getplane(
+        drm_ioctl_mode_getplane(
             fd,
             drm_mode_get_plane {
                 plane_id: id,
@@ -530,13 +527,13 @@ pub fn drm_mode_get_plane(
                 format_type_ptr: formats.as_mut_ptr() as u64,
                 ..drm_mode_get_plane::default()
             },
-        )?)
+        )
     } else {
         Ok(count)
     }
 }
 
-pub fn drm_mode_get_planes(raw: &impl AsFd) -> Result<Vec<u32>> {
+pub fn drm_mode_get_planes(raw: &impl AsFd) -> io::Result<Vec<u32>> {
     let fd = raw.as_fd();
 
     let count = drm_ioctl_mode_getplaneresources(fd, drm_mode_get_plane_res::default())?;
@@ -556,21 +553,21 @@ pub fn drm_mode_get_planes(raw: &impl AsFd) -> Result<Vec<u32>> {
     Ok(plane_ids)
 }
 
-pub fn drm_mode_get_property(raw: &impl AsFd, id: u32) -> Result<drm_mode_get_property> {
-    Ok(drm_ioctl_mode_getproperty(
+pub fn drm_mode_get_property(raw: &impl AsFd, id: u32) -> io::Result<drm_mode_get_property> {
+    drm_ioctl_mode_getproperty(
         raw.as_fd(),
         drm_mode_get_property {
             prop_id: id,
             ..drm_mode_get_property::default()
         },
-    )?)
+    )
 }
 
 pub fn drm_mode_get_properties(
     raw: &impl AsFd,
     object_type: u32,
     object_id: u32,
-) -> Result<Vec<(u32, u64)>> {
+) -> io::Result<Vec<(u32, u64)>> {
     let fd = raw.as_fd();
 
     let count = drm_ioctl_mode_obj_getproperties(
@@ -607,7 +604,7 @@ pub fn drm_mode_get_resources(
     crtc_ids: Option<&mut Vec<u32>>,
     encoder_ids: Option<&mut Vec<u32>>,
     connector_ids: Option<&mut Vec<u32>>,
-) -> Result<drm_mode_card_res> {
+) -> io::Result<drm_mode_card_res> {
     let fd = raw.as_fd();
 
     let count = drm_ioctl_mode_getresources(fd, drm_mode_card_res::default())?;
@@ -639,25 +636,25 @@ pub fn drm_mode_get_resources(
         resources.connector_id_ptr = connectors.as_mut_ptr() as u64;
     }
 
-    Ok(drm_ioctl_mode_getresources(fd, resources)?)
+    drm_ioctl_mode_getresources(fd, resources)
 }
 
-pub fn drm_mode_map_dumb_buffer(raw: &impl AsFd, handle: u32) -> Result<drm_mode_map_dumb> {
-    Ok(drm_ioctl_mode_map_dumb(
+pub fn drm_mode_map_dumb_buffer(raw: &impl AsFd, handle: u32) -> io::Result<drm_mode_map_dumb> {
+    drm_ioctl_mode_map_dumb(
         raw.as_fd(),
         drm_mode_map_dumb {
             handle,
             ..drm_mode_map_dumb::default()
         },
-    )?)
+    )
 }
 
-pub fn drm_set_client_capability(raw: &impl AsFd, cap: u64) -> Result<()> {
-    Ok(drm_ioctl_set_client_cap(
+pub fn drm_set_client_capability(raw: &impl AsFd, cap: u64) -> io::Result<()> {
+    drm_ioctl_set_client_cap(
         raw.as_fd(),
         drm_set_client_cap {
             capability: cap,
             value: 1,
         },
-    )?)
+    )
 }

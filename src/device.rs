@@ -1,6 +1,7 @@
 use std::{
     cell::{Ref, RefCell},
     fs::OpenOptions,
+    io,
     os::fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd},
     path::Path,
     rc::Rc,
@@ -9,7 +10,7 @@ use std::{
 use crate::{
     encoder::Encoder,
     raw::{drm_mode_get_planes, drm_mode_get_resources, drm_set_client_capability},
-    Buffer, BufferType, Connector, Crtc, Error, Output, Plane, Result,
+    Buffer, BufferType, Connector, Crtc, Output, Plane,
 };
 
 #[allow(dead_code)]
@@ -124,7 +125,7 @@ impl Device {
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     /// ```
-    pub fn new<P>(path: P) -> Result<Self>
+    pub fn new<P>(path: P) -> io::Result<Self>
     where
         P: AsRef<Path>,
     {
@@ -271,7 +272,7 @@ impl Device {
         width: u32,
         height: u32,
         bpp: u32,
-    ) -> Result<Buffer> {
+    ) -> io::Result<Buffer> {
         let raw = match buftype {
             BufferType::Dumb => Buffer::new(self, width, height, bpp)?,
         };
@@ -303,14 +304,20 @@ impl Device {
     ///
     /// let output = device.output_from_connector(&connector).unwrap();
     /// ```
-    pub fn output_from_connector(&self, connector: &Rc<Connector>) -> Result<Output> {
+    pub fn output_from_connector(&self, connector: &Rc<Connector>) -> io::Result<Output> {
         let encoder = connector
             .encoders()?
             .into_iter()
             .next()
-            .ok_or(Error::Empty)?;
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Couldn't find an encoder for that connector.",
+            ))?;
 
-        let crtc = encoder.crtcs()?.into_iter().next().ok_or(Error::Empty)?;
+        let crtc = encoder.crtcs()?.into_iter().next().ok_or(io::Error::new(
+            io::ErrorKind::NotFound,
+            "Couldn't find a CRTC for that connector.",
+        ))?;
 
         Ok(Output::new(self, &crtc, &encoder, connector))
     }

@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     convert::TryFrom,
+    io,
     rc::{Rc, Weak},
 };
 
@@ -12,7 +13,7 @@ use crate::{
     raw::{
         drm_connector_status, drm_mode_connector_type, drm_mode_get_connector, drm_mode_object_type,
     },
-    Device, Error, Mode, Result,
+    Device, Mode,
 };
 
 /// A Display Sink Connector
@@ -44,7 +45,7 @@ impl IntoIterator for Modes {
 }
 
 impl Connector {
-    pub(crate) fn new(device: &Device, id: u32) -> Result<Self> {
+    pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let mut encoder_ids = Vec::new();
         let connector = drm_mode_get_connector(device, id, None, Some(&mut encoder_ids))?;
         let con_type = drm_mode_connector_type::try_from(connector.connector_type).unwrap();
@@ -83,8 +84,12 @@ impl Connector {
     ///
     /// let modes = connector.modes().unwrap();
     /// ```
-    pub fn modes(&self) -> Result<Modes> {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn modes(&self) -> io::Result<Modes> {
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let mut raw_modes = Vec::new();
         let _ = drm_mode_get_connector(&device, self.id, Some(&mut raw_modes), None)?;
@@ -117,11 +122,14 @@ impl Connector {
     ///
     /// let mode = connector.preferred_mode().unwrap();
     /// ```
-    pub fn preferred_mode(&self) -> Result<Mode> {
+    pub fn preferred_mode(&self) -> io::Result<Mode> {
         self.modes()?
             .into_iter()
             .find(|mode| mode.has_type(ModeType::Preferred))
-            .ok_or(Error::Empty)
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "No Preferred Mode Found",
+            ))
     }
 
     /// Returns the [Connector] current status
@@ -145,8 +153,12 @@ impl Connector {
     ///     .into_iter()
     ///     .find(|con| con.status().unwrap() == drm_connector_status::Connected);
     /// ```
-    pub fn status(&self) -> Result<drm_connector_status> {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn status(&self) -> io::Result<drm_connector_status> {
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let connector = drm_mode_get_connector(&device, self.id, None, None)?;
 
@@ -195,8 +207,12 @@ impl Connector {
         self.type_id
     }
 
-    pub(crate) fn encoders(self: &Rc<Self>) -> Result<Encoders> {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub(crate) fn encoders(self: &Rc<Self>) -> io::Result<Encoders> {
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let encoders = device
             .encoders()
@@ -208,8 +224,11 @@ impl Connector {
 }
 
 impl Object for Connector {
-    fn device(&self) -> Result<Device> {
-        Ok(self.dev.upgrade().ok_or(Error::Empty)?.into())
+    fn device(&self) -> Device {
+        self.dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into()
     }
 
     fn object_id(&self) -> u32 {

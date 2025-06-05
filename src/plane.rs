@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     convert::{TryFrom, TryInto},
+    io,
     rc::{Rc, Weak},
 };
 
@@ -10,7 +11,7 @@ use crate::{
     device::Inner,
     object::Object,
     raw::{drm_mode_get_plane, drm_mode_object_type},
-    Device, Error, Format, Property, Result,
+    Device, Format, Property,
 };
 
 /// The [Plane] types
@@ -40,7 +41,7 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub(crate) fn new(device: &Device, id: u32) -> Result<Self> {
+    pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let mut formats = Vec::new();
         let raw_plane = drm_mode_get_plane(device, id, Some(&mut formats))?;
         let mut plane = Self {
@@ -118,7 +119,7 @@ impl Plane {
     ///     })
     ///     .unwrap();
     /// ```
-    pub fn properties(&self) -> Result<Vec<Property>> {
+    pub fn properties(&self) -> io::Result<Vec<Property>> {
         Object::properties(self)
     }
 
@@ -158,8 +159,11 @@ impl Plane {
 }
 
 impl Object for Plane {
-    fn device(&self) -> Result<Device> {
-        Ok(self.dev.upgrade().ok_or(Error::Empty)?.into())
+    fn device(&self) -> Device {
+        self.dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into()
     }
 
     fn object_id(&self) -> u32 {

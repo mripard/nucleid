@@ -1,15 +1,17 @@
+use std::io;
+
 use crate::{
     raw::{drm_mode_get_properties, drm_mode_object_type},
-    Device, Property, Result,
+    Device, Property,
 };
 
 pub trait Object {
-    fn device(&self) -> Result<Device>;
+    fn device(&self) -> Device;
     fn object_id(&self) -> u32;
     fn object_type(&self) -> drm_mode_object_type;
 
-    fn properties(&self) -> Result<Vec<Property>> {
-        let dev = self.device()?;
+    fn properties(&self) -> io::Result<Vec<Property>> {
+        let dev = self.device();
         let object_id = self.object_id();
 
         let properties = drm_mode_get_properties(&dev, self.object_type() as u32, object_id)?;

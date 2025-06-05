@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     convert::TryInto,
+    io,
     rc::{Rc, Weak},
 };
 
@@ -12,7 +13,7 @@ use crate::{
         drm_mode_add_framebuffer, drm_mode_create_dumb_buffer, drm_mode_destroy_dumb_buffer,
         drm_mode_map_dumb_buffer, drm_mode_remove_framebuffer,
     },
-    Device, Error, Format, Result,
+    Device, Format,
 };
 
 /// A DRM Buffer Type
@@ -39,7 +40,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub(crate) fn new(device: &Device, width: u32, height: u32, bpp: u32) -> Result<Self> {
+    pub(crate) fn new(device: &Device, width: u32, height: u32, bpp: u32) -> io::Result<Self> {
         let dumb = drm_mode_create_dumb_buffer(device, width, height, bpp)?;
         let map = drm_mode_map_dumb_buffer(device, dumb.handle)?;
 
@@ -207,8 +208,12 @@ impl Buffer {
     ///     .into_framebuffer(Format::XRGB8888)
     ///     .unwrap();
     /// ```
-    pub fn into_framebuffer(self, fmt: Format) -> Result<Framebuffer> {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn into_framebuffer(self, fmt: Format) -> io::Result<Framebuffer> {
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let id = drm_mode_add_framebuffer(
             &device,
@@ -229,7 +234,11 @@ impl Buffer {
 
 impl Drop for Buffer {
     fn drop(&mut self) {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let _res = drm_mode_destroy_dumb_buffer(&device, self.handle);
     }
@@ -281,7 +290,11 @@ impl std::ops::DerefMut for Framebuffer {
 
 impl Drop for Framebuffer {
     fn drop(&mut self) {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
 
         let _res = drm_mode_remove_framebuffer(&device, self.id);
     }

@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    io,
     rc::{Rc, Weak},
 };
 
@@ -7,7 +8,7 @@ use crate::{
     device::Inner,
     object::Object,
     raw::{drm_mode_get_crtc, drm_mode_object_type},
-    Device, Error, Result,
+    Device,
 };
 
 /// A KMS CRTC
@@ -23,7 +24,7 @@ pub struct Crtc {
 }
 
 impl Crtc {
-    pub(crate) fn new(device: &Device, id: u32, idx: usize) -> Result<Self> {
+    pub(crate) fn new(device: &Device, id: u32, idx: usize) -> io::Result<Self> {
         let _ = drm_mode_get_crtc(device, id)?;
 
         Ok(Self {
@@ -39,8 +40,11 @@ impl Crtc {
 }
 
 impl Object for Crtc {
-    fn device(&self) -> Result<Device> {
-        Ok(self.dev.upgrade().ok_or(Error::Empty)?.into())
+    fn device(&self) -> Device {
+        self.dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into()
     }
 
     fn object_id(&self) -> u32 {
