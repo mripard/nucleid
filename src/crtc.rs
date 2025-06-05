@@ -5,8 +5,8 @@ use std::{
 
 use crate::{
     device::Inner,
-    object::{Object, Type as ObjectType},
-    raw::drm_mode_get_crtc,
+    object::Object,
+    raw::{drm_mode_get_crtc, drm_mode_object_type},
     Device, Error, Result,
 };
 
@@ -47,7 +47,7 @@ impl Object for Crtc {
         self.id
     }
 
-    fn object_type(&self) -> ObjectType {
-        ObjectType::Crtc
+    fn object_type(&self) -> drm_mode_object_type {
+        drm_mode_object_type::Crtc
     }
 }

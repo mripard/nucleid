@@ -1,24 +1,12 @@
-use crate::{raw::drm_mode_get_properties, Device, Property, Result};
-
-#[allow(dead_code)]
-#[derive(Debug)]
-#[repr(u32)]
-pub enum Type {
-    Any = 0,
-    Property = 0xb0b0b0b0,
-    Blob = 0xbbbbbbbb,
-    Connector = 0xc0c0c0c0,
-    Crtc = 0xcccccccc,
-    Mode = 0xdededede,
-    Encoder = 0xe0e0e0e0,
-    Plane = 0xeeeeeeee,
-    Fb = 0xfbfbfbfb,
-}
+use crate::{
+    raw::{drm_mode_get_properties, drm_mode_object_type},
+    Device, Property, Result,
+};
 
 pub trait Object {
     fn device(&self) -> Result<Device>;
     fn object_id(&self) -> u32;
-    fn object_type(&self) -> Type;
+    fn object_type(&self) -> drm_mode_object_type;
 
     fn properties(&self) -> Result<Vec<Property>> {
         let dev = self.device()?;

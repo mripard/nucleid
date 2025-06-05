@@ -1,10 +1,169 @@
 use std::{convert::TryInto, ffi::c_uint, os::unix::io::AsRawFd};
 
 use nix::{ioctl_readwrite, ioctl_write_ptr};
+use num_enum::TryFromPrimitive;
 
-use crate::Result;
+use crate::{raw::bindgen::DRM_IOCTL_BASE, Result};
 
-const DRM_IOCTL_BASE: u32 = 'd' as u32;
+pub(crate) mod bindgen {
+    #![allow(dead_code)]
+    #![allow(missing_debug_implementations)]
+    #![allow(missing_docs)]
+    #![allow(non_upper_case_globals)]
+    #![allow(non_camel_case_types)]
+    #![allow(non_snake_case)]
+    #![allow(unsafe_code)]
+    #![allow(unused_imports)]
+    #![allow(clippy::struct_field_names)]
+
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
+
+pub(crate) use bindgen::{
+    drm_mode_atomic, drm_mode_card_res, drm_mode_create_blob, drm_mode_create_dumb, drm_mode_crtc,
+    drm_mode_destroy_dumb, drm_mode_fb_cmd2, drm_mode_get_connector, drm_mode_get_encoder,
+    drm_mode_get_plane, drm_mode_get_plane_res, drm_mode_get_property, drm_mode_map_dumb,
+    drm_mode_modeinfo, drm_mode_obj_get_properties, drm_set_client_cap,
+};
+
+#[allow(dead_code)]
+#[derive(Debug)]
+#[repr(u32)]
+pub enum drm_mode_object_type {
+    Any = bindgen::DRM_MODE_OBJECT_ANY,
+    Property = bindgen::DRM_MODE_OBJECT_PROPERTY,
+    Blob = bindgen::DRM_MODE_OBJECT_BLOB,
+    Connector = bindgen::DRM_MODE_OBJECT_CONNECTOR,
+    Crtc = bindgen::DRM_MODE_OBJECT_CRTC,
+    Mode = bindgen::DRM_MODE_OBJECT_MODE,
+    Encoder = bindgen::DRM_MODE_OBJECT_ENCODER,
+    Plane = bindgen::DRM_MODE_OBJECT_PLANE,
+    Fb = bindgen::DRM_MODE_OBJECT_FB,
+}
+
+/// Connector Status
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
+#[repr(u32)]
+pub enum drm_connector_status {
+    /// This Connector is connected to a sink and can be enabled
+    Connected = 1,
+
+    /// This Connector hasn't detected a sink. Whether the Connector can be enabled or not is
+    /// driver-dependant.
+    Disconnected = 2,
+
+    /// This Connector status couldn't reliably be determined. The Connector can be enabled
+    /// with a fallback mode.
+    Unknown = 3,
+}
+
+/// The Connector Type
+#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
+#[repr(u32)]
+pub enum drm_mode_connector_type {
+    /// The Connector type couldn't be determined
+    Unknown = bindgen::DRM_MODE_CONNECTOR_Unknown,
+
+    /// A VGA DE-15 Connector
+    VGA = bindgen::DRM_MODE_CONNECTOR_VGA,
+
+    /// A DVI-I Connector
+    DVII = bindgen::DRM_MODE_CONNECTOR_DVII,
+
+    /// A DVI-D Connector
+    DVID = bindgen::DRM_MODE_CONNECTOR_DVID,
+
+    /// A DVI-A Connector
+    DVIA = bindgen::DRM_MODE_CONNECTOR_DVIA,
+
+    /// An RCA Connector carrying a CVBS signal
+    Composite = bindgen::DRM_MODE_CONNECTOR_Composite,
+
+    /// An S-Video Connector
+    SVIDEO = bindgen::DRM_MODE_CONNECTOR_SVIDEO,
+
+    /// An LVDS Connector
+    LVDS = bindgen::DRM_MODE_CONNECTOR_LVDS,
+
+    /// A Component Connector
+    Component = bindgen::DRM_MODE_CONNECTOR_Component,
+
+    /// A mini-Din-9 Connector
+    MiniDin9 = bindgen::DRM_MODE_CONNECTOR_9PinDIN,
+
+    /// A `DisplayPort` Connector
+    DisplayPort = bindgen::DRM_MODE_CONNECTOR_DisplayPort,
+
+    /// An HDMI-A Connector
+    HDMIA = bindgen::DRM_MODE_CONNECTOR_HDMIA,
+
+    /// An HDMI-B Connector
+    HDMIB = bindgen::DRM_MODE_CONNECTOR_HDMIB,
+
+    /// A TV Connector
+    TV = bindgen::DRM_MODE_CONNECTOR_TV,
+
+    /// An embedded `DisplayPort` Connector
+    EDP = bindgen::DRM_MODE_CONNECTOR_eDP,
+
+    /// A Virtual Connector
+    Virtual = bindgen::DRM_MODE_CONNECTOR_VIRTUAL,
+
+    /// A MIPI-DSI Connector
+    DSI = bindgen::DRM_MODE_CONNECTOR_DSI,
+
+    /// A MIPI-DPI Connector
+    DPI = bindgen::DRM_MODE_CONNECTOR_DPI,
+
+    /// A Writeback Connector
+    Writeback = bindgen::DRM_MODE_CONNECTOR_WRITEBACK,
+
+    /// An SPI-based Display Connector
+    SPI = bindgen::DRM_MODE_CONNECTOR_SPI,
+}
+
+impl std::fmt::Display for drm_mode_connector_type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Component => write!(f, "Component"),
+            Self::Composite => write!(f, "Composite"),
+            Self::DPI => write!(f, "DPI"),
+            Self::DSI => write!(f, "DSI"),
+            Self::DVIA => write!(f, "DVI-A"),
+            Self::DVID => write!(f, "DVI-D"),
+            Self::DVII => write!(f, "DVI-I"),
+            Self::DisplayPort => write!(f, "DisplayPort"),
+            Self::EDP => write!(f, "eDP"),
+            Self::HDMIA => write!(f, "HDMI-A"),
+            Self::HDMIB => write!(f, "HDMI-B"),
+            Self::LVDS => write!(f, "LVDS"),
+            Self::MiniDin9 => write!(f, "MiniDin9"),
+            Self::SPI => write!(f, "SPI"),
+            Self::SVIDEO => write!(f, "S-VIDEO"),
+            Self::TV => write!(f, "TV"),
+            Self::Unknown => write!(f, "Unknown"),
+            Self::VGA => write!(f, "VGA"),
+            Self::Virtual => write!(f, "Virtual"),
+            Self::Writeback => write!(f, "Writeback"),
+        }
+    }
+}
+
+#[derive(Debug, TryFromPrimitive)]
+#[repr(u32)]
+#[allow(clippy::upper_case_acronyms)]
+pub enum drm_mode_encoder_type {
+    None = bindgen::DRM_MODE_ENCODER_NONE,
+    DAC = bindgen::DRM_MODE_ENCODER_DAC,
+    TMDS = bindgen::DRM_MODE_ENCODER_TMDS,
+    LVDS = bindgen::DRM_MODE_ENCODER_LVDS,
+    TVDAC = bindgen::DRM_MODE_ENCODER_TVDAC,
+    Virtual = bindgen::DRM_MODE_ENCODER_VIRTUAL,
+    DSI = bindgen::DRM_MODE_ENCODER_DSI,
+    DPMST = bindgen::DRM_MODE_ENCODER_DPMST,
+    DPI = bindgen::DRM_MODE_ENCODER_DPI,
+}
+
 const DRM_IOCTL_SET_CLIENT_CAP: u32 = 0x0d;
 const DRM_IOCTL_MODE_GETRESOURCES: u32 = 0xa0;
 const DRM_IOCTL_MODE_GETCRTC: u32 = 0xa1;
@@ -22,55 +181,12 @@ const DRM_IOCTL_MODE_OBJ_GETPROPERTIES: u32 = 0xb9;
 const DRM_IOCTL_MODE_ATOMIC: u32 = 0xbc;
 const DRM_IOCTL_MODE_CREATEPROPBLOB: u32 = 0xbd;
 
-#[derive(Clone, Copy, Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_modeinfo {
-    pub clock: u32,
-    pub hdisplay: u16,
-    pub hsync_start: u16,
-    pub hsync_end: u16,
-    pub htotal: u16,
-    pub hskew: u16,
-    pub vdisplay: u16,
-    pub vsync_start: u16,
-    pub vsync_end: u16,
-    pub vtotal: u16,
-    pub vscan: u16,
-    pub vrefresh: u32,
-    pub flags: u32,
-    pub type_: u32,
-    pub name: [u8; 32],
-}
-
-#[repr(C)]
-pub struct drm_set_client_cap {
-    pub capability: u64,
-    pub value: u64,
-}
-
 ioctl_write_ptr!(
     drm_ioctl_set_client_cap,
     DRM_IOCTL_BASE,
     DRM_IOCTL_SET_CLIENT_CAP,
     drm_set_client_cap
 );
-
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_card_res {
-    pub fb_id_ptr: u64,
-    pub crtc_id_ptr: u64,
-    pub connector_id_ptr: u64,
-    pub encoder_id_ptr: u64,
-    pub count_fbs: u32,
-    pub count_crtcs: u32,
-    pub count_connectors: u32,
-    pub count_encoders: u32,
-    pub min_width: u32,
-    pub max_width: u32,
-    pub min_height: u32,
-    pub max_height: u32,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_getresources,
@@ -79,36 +195,12 @@ ioctl_readwrite!(
     drm_mode_card_res
 );
 
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_crtc {
-    pub set_connectors_ptr: u64,
-    pub count_connectors: u32,
-    pub crtc_id: u32,
-    pub fb_id: u32,
-    pub x: u32,
-    pub y: u32,
-    pub gamma_size: u32,
-    pub mode_valid: u32,
-    pub mode: drm_mode_modeinfo,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_getcrtc,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_GETCRTC,
     drm_mode_crtc
 );
-
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_get_encoder {
-    pub encoder_id: u32,
-    pub encoder_type: u32,
-    pub crtc_id: u32,
-    pub possible_crtcs: u32,
-    pub possible_clones: u32,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_getencoder,
@@ -117,46 +209,12 @@ ioctl_readwrite!(
     drm_mode_get_encoder
 );
 
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_get_connector {
-    pub encoders_ptr: u64,
-    pub modes_ptr: u64,
-    pub props_ptr: u64,
-    pub prop_values_ptr: u64,
-    pub count_modes: u32,
-    pub count_props: u32,
-    pub count_encoders: u32,
-    pub encoder_id: u32,
-    pub connector_id: u32,
-    pub connector_type: u32,
-    pub connector_type_id: u32,
-    pub connection: u32,
-    pub mm_width: u32,
-    pub mm_height: u32,
-    pub subpixel: u32,
-
-    pub _pad: u32,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_getconnector,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_GETCONNECTOR,
     drm_mode_get_connector
 );
-
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_get_property {
-    pub values_ptr: u64,
-    pub enum_blob_ptr: u64,
-    pub prop_id: u32,
-    pub flags: u32,
-    pub name: [u8; 32],
-    pub count_values: u32,
-    pub count_enum_blobs: u32,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_getproperty,
@@ -172,42 +230,12 @@ ioctl_readwrite!(
     c_uint
 );
 
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_crtc_page_flip {
-    pub crtc_id: u32,
-    pub fb_id: u32,
-    pub flags: u32,
-    pub reserved: u32,
-    pub user_data: u64,
-}
-
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_create_dumb {
-    pub height: u32,
-    pub width: u32,
-    pub bpp: u32,
-    pub flags: u32,
-    pub handle: u32,
-    pub pitch: u32,
-    pub size: u64,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_create_dumb,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_CREATE_DUMB,
     drm_mode_create_dumb
 );
-
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_map_dumb {
-    pub handle: u32,
-    pub pad: u32,
-    pub offset: u64,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_map_dump,
@@ -216,25 +244,12 @@ ioctl_readwrite!(
     drm_mode_map_dumb
 );
 
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_destroy_dumb {
-    pub handle: u32,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_destroy_dumb,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_DESTROY_DUMB,
     drm_mode_destroy_dumb
 );
-
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_get_plane_res {
-    pub plane_id_ptr: u64,
-    pub count_planes: u32,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_getplaneresources,
@@ -243,38 +258,12 @@ ioctl_readwrite!(
     drm_mode_get_plane_res
 );
 
-#[derive(Debug, Default)]
-#[repr(C)]
-pub struct drm_mode_get_plane {
-    pub plane_id: u32,
-    pub crtc_id: u32,
-    pub fb_id: u32,
-    pub possible_crtcs: u32,
-    pub gamma_size: u32,
-    pub count_format_types: u32,
-    pub format_type_ptr: u64,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_getplane,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_GETPLANE,
     drm_mode_get_plane
 );
-
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_fb_cmd2 {
-    pub fb_id: u32,
-    pub width: u32,
-    pub height: u32,
-    pub pixel_format: u32,
-    pub flags: u32,
-    pub handles: [u32; 4],
-    pub pitches: [u32; 4],
-    pub offsets: [u32; 4],
-    pub modifier: [u64; 4],
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_addfb2,
@@ -283,16 +272,6 @@ ioctl_readwrite!(
     drm_mode_fb_cmd2
 );
 
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_obj_get_properties {
-    props_ptr: u64,
-    prop_values_ptr: u64,
-    count_props: u32,
-    obj_id: u32,
-    obj_type: u32,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_obj_getproperties,
     DRM_IOCTL_BASE,
@@ -300,33 +279,12 @@ ioctl_readwrite!(
     drm_mode_obj_get_properties
 );
 
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_atomic {
-    pub flags: u32,
-    pub count_objs: u32,
-    pub objs_ptr: u64,
-    pub count_props_ptr: u64,
-    pub props_ptr: u64,
-    pub prop_values_ptr: u64,
-    reserved: u64,
-    pub user_data: u64,
-}
-
 ioctl_readwrite!(
     drm_ioctl_mode_atomic,
     DRM_IOCTL_BASE,
     DRM_IOCTL_MODE_ATOMIC,
     drm_mode_atomic
 );
-
-#[derive(Default)]
-#[repr(C)]
-pub struct drm_mode_create_blob {
-    pub data: u64,
-    pub length: u32,
-    pub blob_id: u32,
-}
 
 ioctl_readwrite!(
     drm_ioctl_mode_createpropblob,

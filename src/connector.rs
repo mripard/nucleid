@@ -4,124 +4,16 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use num_enum::TryFromPrimitive;
-
 use crate::{
     device::Inner,
     encoder::Encoder,
-    mode::Type as ModeType,
-    object::{Object, Type as ObjectType},
-    raw::drm_mode_get_connector,
+    mode::drm_mode_type as ModeType,
+    object::Object,
+    raw::{
+        drm_connector_status, drm_mode_connector_type, drm_mode_get_connector, drm_mode_object_type,
+    },
     Device, Error, Mode, Result,
 };
-
-/// [Connector] Status
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
-#[repr(u32)]
-pub enum Status {
-    /// This [Connector] is connected to a sink and can be enabled
-    Connected = 1,
-
-    /// This [Connector] hasn't detected a sink. Whether the [Connector] can be enabled or not is
-    /// driver-dependant.
-    Disconnected,
-
-    /// This [Connector] status couldn't reliably be determined. The [Connector] can be enabled
-    /// with a fallback mode.
-    Unknown,
-}
-
-/// The [Connector] Type
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
-#[repr(u32)]
-pub enum Type {
-    /// The [Connector] type couldn't be determined
-    Unknown,
-
-    /// A VGA DE-15 [Connector]
-    VGA,
-
-    /// A DVI-I [Connector]
-    DVII,
-
-    /// A DVI-D [Connector]
-    DVID,
-
-    /// A DVI-A [Connector]
-    DVIA,
-
-    /// An RCA [Connector] carrying a CVBS signal
-    Composite,
-
-    /// An S-Video [Connector]
-    SVIDEO,
-
-    /// An LVDS [Connector]
-    LVDS,
-
-    /// A Component [Connector]
-    Component,
-
-    /// A mini-Din-9 [Connector]
-    MiniDin9,
-
-    /// A `DisplayPort` [Connector]
-    DisplayPort,
-
-    /// An HDMI-A [Connector]
-    HDMIA,
-
-    /// An HDMI-B [Connector]
-    HDMIB,
-
-    /// A TV [Connector]
-    TV,
-
-    /// An embedded `DisplayPort` [Connector]
-    EDP,
-
-    /// A Virtual [Connector]
-    Virtual,
-
-    /// A MIPI-DSI [Connector]
-    DSI,
-
-    /// A MIPI-DPI [Connector]
-    DPI,
-
-    /// A Writeback [Connector]
-    Writeback,
-
-    /// An SPI-based Display [Connector]
-    SPI,
-}
-
-impl std::fmt::Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Component => write!(f, "Component"),
-            Self::Composite => write!(f, "Composite"),
-            Self::DPI => write!(f, "DPI"),
-            Self::DSI => write!(f, "DSI"),
-            Self::DVIA => write!(f, "DVI-A"),
-            Self::DVID => write!(f, "DVI-D"),
-            Self::DVII => write!(f, "DVI-I"),
-            Self::DisplayPort => write!(f, "DisplayPort"),
-            Self::EDP => write!(f, "eDP"),
-            Self::HDMIA => write!(f, "HDMI-A"),
-            Self::HDMIB => write!(f, "HDMI-B"),
-            Self::LVDS => write!(f, "LVDS"),
-            Self::MiniDin9 => write!(f, "MiniDin9"),
-            Self::SPI => write!(f, "SPI"),
-            Self::SVIDEO => write!(f, "S-VIDEO"),
-            Self::TV => write!(f, "TV"),
-            Self::Unknown => write!(f, "Unknown"),
-            Self::VGA => write!(f, "VGA"),
-            Self::Virtual => write!(f, "Virtual"),
-            Self::Writeback => write!(f, "Writeback"),
-        }
-    }
-}
 
 /// A Display Sink Connector
 ///
@@ -132,7 +24,7 @@ impl std::fmt::Display for Type {
 pub struct Connector {
     dev: Weak<RefCell<Inner>>,
     id: u32,
-    type_: Type,
+    type_: drm_mode_connector_type,
     type_id: u32,
     mm_height: usize,
     mm_width: usize,
@@ -155,7 +47,7 @@ impl Connector {
     pub(crate) fn new(device: &Device, id: u32) -> Result<Self> {
         let mut encoder_ids = Vec::new();
         let connector = drm_mode_get_connector(device, id, None, Some(&mut encoder_ids))?;
-        let con_type = Type::try_from(connector.connector_type).unwrap();
+        let con_type = drm_mode_connector_type::try_from(connector.connector_type).unwrap();
 
         Ok(Self {
             dev: Rc::downgrade(&device.inner),
@@ -245,20 +137,20 @@ impl Connector {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{ConnectorStatus, Device};
+    /// use nucleid::{raw::drm_connector_status, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.status().unwrap() == ConnectorStatus::Connected);
+    ///     .find(|con| con.status().unwrap() == drm_connector_status::Connected);
     /// ```
-    pub fn status(&self) -> Result<Status> {
+    pub fn status(&self) -> Result<drm_connector_status> {
         let device: Device = self.dev.upgrade().ok_or(Error::Empty)?.into();
 
         let connector = drm_mode_get_connector(&device, self.id, None, None)?;
 
-        Ok(Status::try_from(connector.connection).unwrap())
+        Ok(drm_connector_status::try_from(connector.connection).unwrap())
     }
 
     /// Returns the [Connector] type
@@ -266,34 +158,34 @@ impl Connector {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{ConnectorType, Device};
+    /// use nucleid::{raw::drm_mode_connector_type, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.connector_type() == ConnectorType::HDMIA);
+    ///     .find(|con| con.connector_type() == drm_mode_connector_type::HDMIA);
     /// ```
     #[must_use]
-    pub const fn connector_type(&self) -> Type {
+    pub const fn connector_type(&self) -> drm_mode_connector_type {
         self.type_
     }
 
     /// Returns the [Connector] type index
     ///
     /// [Connector]s are reported by the kernel by using a global ID, but also by using a
-    /// combination of the [Type] and the ID of that [Connector] within that type.
+    /// combination of the [drm_mode_connector_type] and the ID of that [Connector] within that type.
     ///
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{ConnectorType, Device};
+    /// use nucleid::{raw::drm_mode_connector_type, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.connector_type() == ConnectorType::HDMIA)
+    ///     .find(|con| con.connector_type() == drm_mode_connector_type::HDMIA)
     ///     .unwrap();
     ///
     /// assert_eq!(connector.connector_type_id(), 0);
@@ -324,8 +216,8 @@ impl Object for Connector {
         self.id
     }
 
-    fn object_type(&self) -> ObjectType {
-        ObjectType::Connector
+    fn object_type(&self) -> drm_mode_object_type {
+        drm_mode_object_type::Connector
     }
 }
 

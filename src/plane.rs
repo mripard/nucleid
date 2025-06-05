@@ -8,15 +8,15 @@ use num_enum::TryFromPrimitive;
 
 use crate::{
     device::Inner,
-    object::{Object, Type as ObjectType},
-    raw::drm_mode_get_plane,
+    object::Object,
+    raw::{drm_mode_get_plane, drm_mode_object_type},
     Device, Error, Format, Property, Result,
 };
 
 /// The [Plane] types
 #[derive(Debug, Eq, PartialEq, TryFromPrimitive)]
 #[repr(u32)]
-pub enum Type {
+pub enum drm_plane_type {
     /// The [Plane] is an overlay, aka a sprite. Any plane that is neither a primary nor a cursor
     /// plane
     Overlay = 0,
@@ -122,7 +122,7 @@ impl Plane {
         Object::properties(self)
     }
 
-    /// Returns the [Plane] [Type]
+    /// Returns the [Plane] [drm_plane_type]
     ///
     /// # Panics
     ///
@@ -141,7 +141,7 @@ impl Plane {
     ///     .unwrap();
     /// ```
     #[must_use]
-    pub fn plane_type(&self) -> Type {
+    pub fn plane_type(&self) -> drm_plane_type {
         let type_prop = self
             .properties()
             .unwrap()
@@ -153,7 +153,7 @@ impl Plane {
         // something that underflows or overflows an u32, we have a serious issue.
         let val: u32 = type_prop.value().try_into().unwrap();
 
-        Type::try_from(val).unwrap()
+        drm_plane_type::try_from(val).unwrap()
     }
 }
 
@@ -166,8 +166,8 @@ impl Object for Plane {
         self.id
     }
 
-    fn object_type(&self) -> ObjectType {
-        ObjectType::Plane
+    fn object_type(&self) -> drm_mode_object_type {
+        drm_mode_object_type::Plane
     }
 }
 

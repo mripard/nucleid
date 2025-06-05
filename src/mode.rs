@@ -1,8 +1,12 @@
-use crate::raw::drm_mode_modeinfo;
+use std::ffi::CStr;
+
+use bytemuck::cast_slice;
+
+use crate::raw::{bindgen, drm_mode_modeinfo};
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
-pub enum Type {
+pub enum drm_mode_type {
     Builtin,
     ClockC,
     CrtcC,
@@ -24,25 +28,26 @@ pub struct Mode {
 
 impl Mode {
     pub(crate) fn new(info: drm_mode_modeinfo) -> Self {
-        let name = std::str::from_utf8(&info.name)
-            .unwrap()
-            .trim_end_matches(char::from(0))
-            .to_string();
+        let name = CStr::from_bytes_until_nul(cast_slice(&info.name))
+            .expect("The kernel guarantees the string is null-terminated.")
+            .to_str()
+            .expect("The kernel guarantees this is an ASCII.")
+            .to_owned();
 
         Self { name, inner: info }
     }
 
-    pub(crate) const fn has_type(&self, arg: Type) -> bool {
+    pub(crate) const fn has_type(&self, arg: drm_mode_type) -> bool {
         let mode_type = self.inner.type_;
 
         let mask = match arg {
-            Type::Builtin => 1,
-            Type::ClockC => (1 << 1) | 1,
-            Type::CrtcC => (1 << 2) | 1,
-            Type::Preferred => 1 << 3,
-            Type::Default => 1 << 4,
-            Type::UserDef => 1 << 5,
-            Type::Driver => 1 << 6,
+            drm_mode_type::Builtin => bindgen::DRM_MODE_TYPE_BUILTIN,
+            drm_mode_type::ClockC => bindgen::DRM_MODE_TYPE_CLOCK_C,
+            drm_mode_type::CrtcC => bindgen::DRM_MODE_TYPE_CRTC_C,
+            drm_mode_type::Preferred => bindgen::DRM_MODE_TYPE_PREFERRED,
+            drm_mode_type::Default => bindgen::DRM_MODE_TYPE_DEFAULT,
+            drm_mode_type::UserDef => bindgen::DRM_MODE_TYPE_USERDEF,
+            drm_mode_type::Driver => bindgen::DRM_MODE_TYPE_DRIVER,
         };
 
         (mode_type & mask) == mask
