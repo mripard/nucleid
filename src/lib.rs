@@ -35,6 +35,7 @@ pub use crate::crtc::Crtc;
 pub use crate::device::Device;
 pub use crate::format::Format;
 pub use crate::mode::Mode;
+pub use crate::object::Object;
 pub use crate::output::ConnectorUpdate;
 pub use crate::output::ObjectUpdate;
 pub use crate::output::Output;
