@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     cell::RefCell,
     convert::{TryFrom, TryInto},
@@ -173,6 +174,12 @@ impl Object for Plane {
 
     fn object_type(&self) -> drm_mode_object_type {
         drm_mode_object_type::Plane
+    }
+}
+
+impl fmt::Display for Plane {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("plane-{}", self.id))
     }
 }
 

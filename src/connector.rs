@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     cell::RefCell,
     convert::TryFrom,
@@ -237,6 +238,12 @@ impl Object for Connector {
 
     fn object_type(&self) -> drm_mode_object_type {
         drm_mode_object_type::Connector
+    }
+}
+
+impl fmt::Display for Connector {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{}-{}", self.type_, self.type_id))
     }
 }
 

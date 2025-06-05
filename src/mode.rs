@@ -1,3 +1,4 @@
+use core::fmt;
 use std::ffi::CStr;
 
 use bytemuck::cast_slice;
@@ -127,5 +128,26 @@ impl Mode {
     #[must_use]
     pub const fn width(&self) -> u16 {
         self.inner.hdisplay
+    }
+}
+
+impl fmt::Display for Mode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!(
+            "{}: {} {} {} {} {} {} {} {} {} {} {:x} {:x}",
+            self.name,
+            self.inner.vrefresh,
+            self.inner.clock,
+            self.inner.hdisplay,
+            self.inner.hsync_start,
+            self.inner.hsync_end,
+            self.inner.htotal,
+            self.inner.vdisplay,
+            self.inner.vsync_start,
+            self.inner.vsync_end,
+            self.inner.vtotal,
+            self.inner.type_,
+            self.inner.flags
+        ))
     }
 }
