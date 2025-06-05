@@ -21,6 +21,7 @@ facet-enum-repr = { git = "https://github.com/mripard/dradis.git", rev = "fc7796
 fixed = { version = "1.29.0", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
 rustix = { version = "1.0.7", default-features = false, features = ["std"] }
+tracing = { version = "0.1.41", default-features = false }
 
 [dev-dependencies]
 anyhow = { version = "1.0.98", default-features = false, features = ["std"] }

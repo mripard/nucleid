@@ -6,6 +6,7 @@ use std::{
 };
 
 use fixed::types::U16F16;
+use tracing::{debug, trace};
 
 use crate::{
     buffer::Framebuffer, device::Inner, encoder::Encoder, object::Object,
@@ -184,6 +185,10 @@ impl Update {
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn add_connector(mut self, connector: ConnectorUpdate) -> Self {
+        trace!(
+            "Adding connector {} update",
+            connector.connector.to_string()
+        );
         self.connector = Some(connector);
         self
     }
@@ -226,6 +231,7 @@ impl Update {
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn add_plane(mut self, plane: PlaneUpdate) -> Self {
+        trace!("Adding plane {} update", plane.plane.to_string());
         self.planes.push(plane);
         self
     }
@@ -276,6 +282,8 @@ impl Update {
     ///     .unwrap();
     /// ```
     pub fn commit(self) -> io::Result<Output> {
+        debug!("Starting atomic commit.");
+
         let device: Device = self
             .output
             .dev
@@ -453,6 +461,8 @@ impl ConnectorUpdate {
     /// ```
     #[must_use]
     pub fn new(connector: &Rc<Connector>) -> Self {
+        trace!("Creating new connector update for {connector}");
+
         Self {
             connector: Rc::clone(connector),
             properties: HashMap::new(),
@@ -462,6 +472,11 @@ impl ConnectorUpdate {
 
 impl ObjectUpdate for ConnectorUpdate {
     fn set_property(mut self, property: &str, val: u64) -> Self {
+        trace!(
+            "Connector {}: Adding property {property}, value {val}",
+            self.connector.to_string()
+        );
+
         self.properties.insert(property.to_string(), val);
         self
     }
@@ -512,6 +527,8 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn new(plane: &Rc<Plane>) -> Self {
+        trace!("Creating new plane update for {plane}");
+
         Self {
             plane: Rc::clone(plane),
             properties: HashMap::new(),
@@ -565,6 +582,8 @@ impl PlaneUpdate {
     #[must_use]
     pub fn set_framebuffer(self, fb: &Framebuffer) -> Self {
         let fb_id = fb.id();
+
+        trace!("Plane {}: Setting FrameBuffer ID {fb_id}", self.plane);
         self.set_property("FB_ID", u64::from(fb_id))
     }
 
@@ -608,6 +627,10 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_display_coordinates(self, x: usize, y: usize) -> Self {
+        trace!(
+            "Plane {}: Setting display coordinates to {x}x{y}",
+            self.plane
+        );
         self.set_property("CRTC_X", x as u64)
             .set_property("CRTC_Y", y as u64)
     }
@@ -652,6 +675,10 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_display_size(self, width: usize, height: usize) -> Self {
+        trace!(
+            "Plane {}: Setting display size to {width}x{height}",
+            self.plane
+        );
         self.set_property("CRTC_H", height as u64)
             .set_property("CRTC_W", width as u64)
     }
@@ -698,6 +725,11 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_source_coordinates(self, x: f32, y: f32) -> Self {
+        trace!(
+            "Plane {}: Setting source coordinates to {x}x{y}",
+            self.plane
+        );
+
         let fixed_x = U16F16::from_num(x);
         let fixed_y = U16F16::from_num(y);
 
@@ -747,6 +779,11 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_source_size(self, width: f32, height: f32) -> Self {
+        trace!(
+            "Plane {}: Setting source size to {width}x{height}",
+            self.plane
+        );
+
         let fixed_width = U16F16::from_num(width);
         let fixed_height = U16F16::from_num(height);
 
