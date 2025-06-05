@@ -26,15 +26,11 @@ pub trait Object {
         Ok(ret)
     }
 
-    fn property_id(&self, property: &str) -> Option<u32> {
-        self.properties().map_or(None, |properties| {
-            properties.into_iter().find_map(|prop| {
-                if prop.name() == property {
-                    Some(prop.id())
-                } else {
-                    None
-                }
-            })
-        })
+    fn property(&self, name: &str) -> io::Result<Option<Property>> {
+        Ok(self.properties()?.into_iter().find(|p| p.name() == name))
+    }
+
+    fn property_id(&self, name: &str) -> io::Result<Option<u32>> {
+        Ok(self.property(name)?.map(|p| p.id()))
     }
 }

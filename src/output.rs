@@ -287,7 +287,7 @@ impl Update {
         let crtc_object_id = self.output.crtc.object_id();
 
         for plane in self.planes {
-            let crtc_prop_id = plane.plane.property_id("CRTC_ID").unwrap();
+            let crtc_prop_id = plane.plane.property_id("CRTC_ID")?.unwrap();
             properties.push((
                 plane.plane.object_id(),
                 crtc_prop_id,
@@ -295,7 +295,7 @@ impl Update {
             ));
 
             for (prop_name, prop_value) in plane.properties {
-                let prop_id = plane.plane.property_id(&prop_name).ok_or(io::Error::new(
+                let prop_id = plane.plane.property_id(&prop_name)?.ok_or(io::Error::new(
                     io::ErrorKind::NotFound,
                     "KMS Property Not Found for that object",
                 ))?;
@@ -304,17 +304,17 @@ impl Update {
             }
         }
 
-        let active_prop_id = self.output.crtc.property_id("ACTIVE").unwrap();
+        let active_prop_id = self.output.crtc.property_id("ACTIVE")?.unwrap();
         properties.push((crtc_object_id, active_prop_id, 1));
 
         if let Some(mode) = self.mode {
             let mode_id = u64::from(drm_mode_create_property_blob(&device, mode.inner())?);
-            let mode_prop_id = self.output.crtc.property_id("MODE_ID").unwrap();
+            let mode_prop_id = self.output.crtc.property_id("MODE_ID")?.unwrap();
             properties.push((crtc_object_id, mode_prop_id, mode_id));
         }
 
         if let Some(connector) = self.connector {
-            let crtc_prop_id = connector.connector.property_id("CRTC_ID").unwrap();
+            let crtc_prop_id = connector.connector.property_id("CRTC_ID")?.unwrap();
             properties.push((
                 connector.connector.object_id(),
                 crtc_prop_id,
@@ -322,13 +322,14 @@ impl Update {
             ));
 
             for (prop_name, prop_value) in connector.properties {
-                let prop_id = connector
-                    .connector
-                    .property_id(&prop_name)
-                    .ok_or(io::Error::new(
-                        io::ErrorKind::NotFound,
-                        "KMS Property Not Found for that object",
-                    ))?;
+                let prop_id =
+                    connector
+                        .connector
+                        .property_id(&prop_name)?
+                        .ok_or(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "KMS Property Not Found for that object",
+                        ))?;
 
                 properties.push((connector.connector.object_id(), prop_id, prop_value));
             }
