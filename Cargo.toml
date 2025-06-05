@@ -15,9 +15,11 @@ bindgen = { version = "0.71.1", default-features = false }
 
 [dependencies]
 bytemuck = { version = "1.23.0", default-features = false }
+facet = { version = "0.27.9", default-features = false }
+facet-derive = { version = "0.27.9", default-features = false }
+facet-enum-repr = { git = "https://github.com/mripard/dradis.git", rev = "fc77962a54f3f4a422e1e4acdfe8b6c41bdd07f5" }
 fixed = { version = "1.29.0", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
-num_enum = { version = "0.7.3", features = ["complex-expressions"] }
 rustix = { version = "1.0.7", default-features = false, features = ["std"] }
 
 [dev-dependencies]

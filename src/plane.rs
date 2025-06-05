@@ -5,7 +5,8 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use num_enum::TryFromPrimitive;
+use facet_derive::Facet;
+use facet_enum_repr::FacetEnumRepr;
 
 use crate::{
     device::Inner,
@@ -15,7 +16,7 @@ use crate::{
 };
 
 /// The [Plane] types
-#[derive(Debug, Eq, PartialEq, TryFromPrimitive)]
+#[derive(Debug, Eq, Facet, FacetEnumRepr, PartialEq)]
 #[repr(u32)]
 pub enum drm_plane_type {
     /// The [Plane] is an overlay, aka a sprite. Any plane that is neither a primary nor a cursor

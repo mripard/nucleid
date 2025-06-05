@@ -1,11 +1,12 @@
 use std::{
-    convert::TryInto,
+    convert::{TryFrom, TryInto},
     ffi::c_uint,
     io,
     os::fd::{AsFd, BorrowedFd},
 };
 
-use num_enum::TryFromPrimitive;
+use facet::Facet;
+use facet_enum_repr::FacetEnumRepr;
 use rustix::{
     io::Errno,
     ioctl::{ioctl, opcode, Setter, Updater},
@@ -50,7 +51,7 @@ pub enum drm_mode_object_type {
 }
 
 /// Connector Status
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Facet, FacetEnumRepr, PartialEq, Eq)]
 #[repr(u32)]
 pub enum drm_connector_status {
     /// This Connector is connected to a sink and can be enabled
@@ -66,7 +67,7 @@ pub enum drm_connector_status {
 }
 
 /// The Connector Type
-#[derive(Clone, Copy, Debug, PartialEq, Eq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Facet, FacetEnumRepr, PartialEq)]
 #[repr(u32)]
 pub enum drm_mode_connector_type {
     /// The Connector type couldn't be determined
@@ -157,7 +158,7 @@ impl std::fmt::Display for drm_mode_connector_type {
     }
 }
 
-#[derive(Debug, TryFromPrimitive)]
+#[derive(Debug, Facet, FacetEnumRepr)]
 #[repr(u32)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum drm_mode_encoder_type {
