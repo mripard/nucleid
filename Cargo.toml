@@ -1,6 +1,6 @@
 [package]
 name = "nucleid"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Maxime Ripard <maxime@cerno.tech>"]
 description = "Linux KMS abstraction library"
 edition = "2018"
