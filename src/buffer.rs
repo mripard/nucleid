@@ -193,7 +193,7 @@ impl Buffer {
     ///
     /// # Errors
     ///
-    /// Will return [Error] if the [Device] can't be accessed or if the ioctl fails.
+    /// If the [Device] can't be accessed or if the ioctl fails.
     ///
     /// # Example
     ///

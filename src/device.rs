@@ -115,8 +115,8 @@ impl Device {
     ///
     /// # Errors
     ///
-    /// Will return [Error] if `path` doesn't exist, the user doesn't have permission to access it
-    /// or if the ioctl fails.
+    /// If `path` doesn't exist, the user doesn't have permission to access it or if the ioctl
+    /// fails.
     ///
     /// # Example
     ///
@@ -252,7 +252,7 @@ impl Device {
     ///
     /// # Errors
     ///
-    /// Will return [Error] if the buffer allocation fails
+    /// If the buffer allocation fails
     ///
     /// # Example
     ///
@@ -287,8 +287,8 @@ impl Device {
     ///
     /// # Errors
     ///
-    /// Will return [Error] if the [Device] can't be accessed, if the ioctl fails, or if it could
-    /// not find a suitable [Crtc] for the [Connector]
+    /// If the [Device] can't be accessed, if the ioctl fails, or if it could not find a suitable
+    /// [Crtc] for the [Connector]
     ///
     /// # Example
     ///

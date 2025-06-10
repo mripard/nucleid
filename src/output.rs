@@ -240,8 +240,8 @@ impl Update {
     ///
     /// # Errors
     ///
-    /// Will return [Error] if the [Device] can't be accessed, if the ioctl fails, or if the
-    /// [Update] is rejected by the hardware.
+    /// If the [Device] can't be accessed, if the ioctl fails, or if the [Update] is rejected by the
+    /// hardware.
     ///
     /// # Panics
     ///
