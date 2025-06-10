@@ -150,13 +150,13 @@ impl Connector {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{raw::drm_connector_status, Device};
+    /// use nucleid::{ConnectorStatus, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.status().unwrap() == drm_connector_status::Connected);
+    ///     .find(|con| con.status().unwrap() == ConnectorStatus::Connected);
     /// ```
     pub fn status(&self) -> io::Result<drm_connector_status> {
         let device: Device = self
@@ -175,13 +175,13 @@ impl Connector {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{raw::drm_mode_connector_type, Device};
+    /// use nucleid::{ConnectorType, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.connector_type() == drm_mode_connector_type::HDMIA);
+    ///     .find(|con| con.connector_type() == ConnectorType::HDMIA);
     /// ```
     #[must_use]
     pub const fn connector_type(&self) -> drm_mode_connector_type {
@@ -201,13 +201,13 @@ impl Connector {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{raw::drm_mode_connector_type, Device};
+    /// use nucleid::{ConnectorType, Device};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let connector = device.connectors()
     ///     .into_iter()
-    ///     .find(|con| con.connector_type() == drm_mode_connector_type::HDMIA)
+    ///     .find(|con| con.connector_type() == ConnectorType::HDMIA)
     ///     .unwrap();
     ///
     /// assert_eq!(connector.connector_type_id(), 0);
