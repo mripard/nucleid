@@ -306,7 +306,7 @@ impl Device {
     /// ```
     pub fn output_from_connector(&self, connector: &Rc<Connector>) -> io::Result<Output> {
         let encoder = connector
-            .encoders()?
+            .encoders()
             .into_iter()
             .next()
             .ok_or(io::Error::new(
@@ -314,7 +314,7 @@ impl Device {
                 "Couldn't find an encoder for that connector.",
             ))?;
 
-        let crtc = encoder.crtcs()?.into_iter().next().ok_or(io::Error::new(
+        let crtc = encoder.crtcs().into_iter().next().ok_or(io::Error::new(
             io::ErrorKind::NotFound,
             "Couldn't find a CRTC for that connector.",
         ))?;

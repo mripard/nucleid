@@ -195,6 +195,10 @@ impl Buffer {
     ///
     /// If the [Device] can't be accessed or if the ioctl fails.
     ///
+    /// # Panics
+    ///
+    /// If we can't access the parent [Device]
+    ///
     /// # Example
     ///
     /// ```no_run

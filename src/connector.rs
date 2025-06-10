@@ -71,6 +71,10 @@ impl Connector {
     ///
     /// If the [Device] can't be accessed or if the ioctl fails.
     ///
+    /// # Panics
+    ///
+    /// If we can't access the parent [Device]
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -184,6 +188,10 @@ impl Connector {
         self.type_
     }
 
+    #[expect(
+        clippy::doc_markdown,
+        reason = "drm_mode_connector_type is just more consistent"
+    )]
     /// Returns the [Connector] type index
     ///
     /// [Connector]s are reported by the kernel by using a global ID, but also by using a
@@ -209,7 +217,7 @@ impl Connector {
         self.type_id
     }
 
-    pub(crate) fn encoders(self: &Rc<Self>) -> io::Result<Encoders> {
+    pub(crate) fn encoders(self: &Rc<Self>) -> Encoders {
         let device: Device = self
             .dev
             .upgrade()
@@ -221,7 +229,7 @@ impl Connector {
             .filter(|enc| self.encoder_ids.contains(&enc.id()))
             .collect();
 
-        Ok(Encoders(encoders))
+        Encoders(encoders)
     }
 }
 

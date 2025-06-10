@@ -358,7 +358,7 @@ pub fn drm_mode_create_dumb_buffer(
     height: u32,
     bpp: u32,
 ) -> io::Result<drm_mode_create_dumb> {
-    Ok(drm_ioctl_mode_create_dumb(
+    drm_ioctl_mode_create_dumb(
         raw.as_fd(),
         drm_mode_create_dumb {
             height,
@@ -366,7 +366,7 @@ pub fn drm_mode_create_dumb_buffer(
             bpp,
             ..drm_mode_create_dumb::default()
         },
-    )?)
+    )
 }
 
 pub fn drm_mode_add_framebuffer(

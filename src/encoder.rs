@@ -39,7 +39,7 @@ impl Encoder {
         self.id
     }
 
-    pub fn crtcs(self: &Rc<Self>) -> io::Result<Crtcs> {
+    pub fn crtcs(self: &Rc<Self>) -> Crtcs {
         let device: Device = self
             .dev
             .upgrade()
@@ -58,7 +58,7 @@ impl Encoder {
             })
             .collect();
 
-        Ok(Crtcs(crtcs))
+        Crtcs(crtcs)
     }
 }
 
