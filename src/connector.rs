@@ -187,7 +187,8 @@ impl Connector {
     /// Returns the [Connector] type index
     ///
     /// [Connector]s are reported by the kernel by using a global ID, but also by using a
-    /// combination of the [drm_mode_connector_type] and the ID of that [Connector] within that type.
+    /// combination of the [drm_mode_connector_type] and the ID of that [Connector] within that
+    /// type.
     ///
     /// # Example
     ///

@@ -203,8 +203,8 @@ If there's an I/O Error while accessing the given file descriptor
             // SAFETY: We checked both the opcode and the type.
             let ioctl_obj = unsafe { Updater::<OPCODE, $ty>::new(&mut arg) };
 
-            // SAFETY: This function is unsafe because the driver isn't guaranteed to implement the ioctl
-            // properly. We don't have much of a choice and still have to trust the
+            // SAFETY: This function is unsafe because the driver isn't guaranteed to implement the
+            // ioctl properly. We don't have much of a choice and still have to trust the
             // kernel there.
             unsafe { ioctl(fd, ioctl_obj) }
                 .map(|()| arg)
