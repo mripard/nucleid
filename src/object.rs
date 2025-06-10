@@ -1,27 +1,28 @@
-use crate::{raw::drm_mode_get_properties, Device, Property, Result};
+use std::io;
 
-#[allow(dead_code)]
-#[derive(Debug)]
-#[repr(u32)]
-pub enum Type {
-    Any = 0,
-    Property = 0xb0b0b0b0,
-    Blob = 0xbbbbbbbb,
-    Connector = 0xc0c0c0c0,
-    Crtc = 0xcccccccc,
-    Mode = 0xdededede,
-    Encoder = 0xe0e0e0e0,
-    Plane = 0xeeeeeeee,
-    Fb = 0xfbfbfbfb,
-}
+use crate::{
+    raw::{drm_mode_get_properties, drm_mode_object_type},
+    Device, Property,
+};
 
+/// A KMS Object
 pub trait Object {
-    fn device(&self) -> Result<Device>;
-    fn object_id(&self) -> u32;
-    fn object_type(&self) -> Type;
+    /// Returns the [Device] the [Object] belongs to
+    fn device(&self) -> Device;
 
-    fn properties(&self) -> Result<Vec<Property>> {
-        let dev = self.device()?;
+    /// Returns the [Object] ID
+    fn object_id(&self) -> u32;
+
+    /// Returns the [Object] type
+    fn object_type(&self) -> drm_mode_object_type;
+
+    /// Returns a list of [Property] attached to that object.
+    ///
+    /// # Errors
+    ///
+    /// If there's an I/O Error while accessing the [Device] file descriptor
+    fn properties(&self) -> io::Result<Vec<Property>> {
+        let dev = self.device();
         let object_id = self.object_id();
 
         let properties = drm_mode_get_properties(&dev, self.object_type() as u32, object_id)?;
@@ -36,15 +37,21 @@ pub trait Object {
         Ok(ret)
     }
 
-    fn property_id(&self, property: &str) -> Option<u32> {
-        self.properties().map_or(None, |properties| {
-            properties.into_iter().find_map(|prop| {
-                if prop.name() == property {
-                    Some(prop.id())
-                } else {
-                    None
-                }
-            })
-        })
+    /// Looks up a [Property] by name on a given [Object]
+    ///
+    /// # Errors
+    ///
+    /// If there's an I/O Error while accessing the [Device] file descriptor
+    fn property(&self, name: &str) -> io::Result<Option<Property>> {
+        Ok(self.properties()?.into_iter().find(|p| p.name() == name))
+    }
+
+    /// Looks up a [Property] ID by name on a given [Object]
+    ///
+    /// # Errors
+    ///
+    /// If there's an I/O Error while accessing the [Device] file descriptor
+    fn property_id(&self, name: &str) -> io::Result<Option<u32>> {
+        Ok(self.property(name)?.map(|p| p.id()))
     }
 }

@@ -1,15 +1,17 @@
 use std::{
     cell::RefCell,
     collections::HashMap,
+    io,
     rc::{Rc, Weak},
 };
 
 use fixed::types::U16F16;
+use tracing::{debug, trace};
 
 use crate::{
     buffer::Framebuffer, device::Inner, encoder::Encoder, object::Object,
-    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device,
-    Error, Mode, Plane, Result,
+    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device, Mode,
+    Plane,
 };
 
 /// Display Pipeline Output Abstraction
@@ -91,7 +93,11 @@ impl Output {
     /// ```
     #[must_use]
     pub fn planes(&self) -> Planes {
-        let device: Device = self.dev.upgrade().ok_or(Error::Empty).unwrap().into();
+        let device: Device = self
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
         let crtc_idx = self.crtc.index();
 
         let planes = device
@@ -179,6 +185,10 @@ impl Update {
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn add_connector(mut self, connector: ConnectorUpdate) -> Self {
+        trace!(
+            "Adding connector {} update",
+            connector.connector.to_string()
+        );
         self.connector = Some(connector);
         self
     }
@@ -221,6 +231,7 @@ impl Update {
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn add_plane(mut self, plane: PlaneUpdate) -> Self {
+        trace!("Adding plane {} update", plane.plane.to_string());
         self.planes.push(plane);
         self
     }
@@ -270,13 +281,21 @@ impl Update {
     ///     .commit()
     ///     .unwrap();
     /// ```
-    pub fn commit(self) -> Result<Output> {
-        let device: Device = self.output.dev.upgrade().ok_or(Error::Empty)?.into();
+    pub fn commit(self) -> io::Result<Output> {
+        debug!("Starting atomic commit.");
+
+        let device: Device = self
+            .output
+            .dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into();
+
         let mut properties = Vec::new();
         let crtc_object_id = self.output.crtc.object_id();
 
         for plane in self.planes {
-            let crtc_prop_id = plane.plane.property_id("CRTC_ID").unwrap();
+            let crtc_prop_id = plane.plane.property_id("CRTC_ID")?.unwrap();
             properties.push((
                 plane.plane.object_id(),
                 crtc_prop_id,
@@ -284,23 +303,26 @@ impl Update {
             ));
 
             for (prop_name, prop_value) in plane.properties {
-                let prop_id = plane.plane.property_id(&prop_name).ok_or(Error::Empty)?;
+                let prop_id = plane.plane.property_id(&prop_name)?.ok_or(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "KMS Property Not Found for that object",
+                ))?;
 
                 properties.push((plane.plane.object_id(), prop_id, prop_value));
             }
         }
 
-        let active_prop_id = self.output.crtc.property_id("ACTIVE").unwrap();
+        let active_prop_id = self.output.crtc.property_id("ACTIVE")?.unwrap();
         properties.push((crtc_object_id, active_prop_id, 1));
 
         if let Some(mode) = self.mode {
             let mode_id = u64::from(drm_mode_create_property_blob(&device, mode.inner())?);
-            let mode_prop_id = self.output.crtc.property_id("MODE_ID").unwrap();
+            let mode_prop_id = self.output.crtc.property_id("MODE_ID")?.unwrap();
             properties.push((crtc_object_id, mode_prop_id, mode_id));
         }
 
         if let Some(connector) = self.connector {
-            let crtc_prop_id = connector.connector.property_id("CRTC_ID").unwrap();
+            let crtc_prop_id = connector.connector.property_id("CRTC_ID")?.unwrap();
             properties.push((
                 connector.connector.object_id(),
                 crtc_prop_id,
@@ -308,10 +330,14 @@ impl Update {
             ));
 
             for (prop_name, prop_value) in connector.properties {
-                let prop_id = connector
-                    .connector
-                    .property_id(&prop_name)
-                    .ok_or(Error::Empty)?;
+                let prop_id =
+                    connector
+                        .connector
+                        .property_id(&prop_name)?
+                        .ok_or(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "KMS Property Not Found for that object",
+                        ))?;
 
                 properties.push((connector.connector.object_id(), prop_id, prop_value));
             }
@@ -435,6 +461,8 @@ impl ConnectorUpdate {
     /// ```
     #[must_use]
     pub fn new(connector: &Rc<Connector>) -> Self {
+        trace!("Creating new connector update for {connector}");
+
         Self {
             connector: Rc::clone(connector),
             properties: HashMap::new(),
@@ -444,6 +472,11 @@ impl ConnectorUpdate {
 
 impl ObjectUpdate for ConnectorUpdate {
     fn set_property(mut self, property: &str, val: u64) -> Self {
+        trace!(
+            "Connector {}: Adding property {property}, value {val}",
+            self.connector.to_string()
+        );
+
         self.properties.insert(property.to_string(), val);
         self
     }
@@ -494,6 +527,8 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn new(plane: &Rc<Plane>) -> Self {
+        trace!("Creating new plane update for {plane}");
+
         Self {
             plane: Rc::clone(plane),
             properties: HashMap::new(),
@@ -547,6 +582,8 @@ impl PlaneUpdate {
     #[must_use]
     pub fn set_framebuffer(self, fb: &Framebuffer) -> Self {
         let fb_id = fb.id();
+
+        trace!("Plane {}: Setting FrameBuffer ID {fb_id}", self.plane);
         self.set_property("FB_ID", u64::from(fb_id))
     }
 
@@ -590,6 +627,10 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_display_coordinates(self, x: usize, y: usize) -> Self {
+        trace!(
+            "Plane {}: Setting display coordinates to {x}x{y}",
+            self.plane
+        );
         self.set_property("CRTC_X", x as u64)
             .set_property("CRTC_Y", y as u64)
     }
@@ -634,6 +675,10 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_display_size(self, width: usize, height: usize) -> Self {
+        trace!(
+            "Plane {}: Setting display size to {width}x{height}",
+            self.plane
+        );
         self.set_property("CRTC_H", height as u64)
             .set_property("CRTC_W", width as u64)
     }
@@ -680,6 +725,11 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_source_coordinates(self, x: f32, y: f32) -> Self {
+        trace!(
+            "Plane {}: Setting source coordinates to {x}x{y}",
+            self.plane
+        );
+
         let fixed_x = U16F16::from_num(x);
         let fixed_y = U16F16::from_num(y);
 
@@ -729,6 +779,11 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_source_size(self, width: f32, height: f32) -> Self {
+        trace!(
+            "Plane {}: Setting source size to {width}x{height}",
+            self.plane
+        );
+
         let fixed_width = U16F16::from_num(width);
         let fixed_height = U16F16::from_num(height);
 

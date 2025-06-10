@@ -1,4 +1,7 @@
-use num_enum::TryFromPrimitive;
+use std::convert::{TryFrom, TryInto};
+
+use facet_derive::Facet;
+use facet_enum_repr::FacetEnumRepr;
 
 macro_rules! fourcc_code {
     ($a:expr, $b:expr, $c:expr, $d:expr) => {
@@ -7,7 +10,7 @@ macro_rules! fourcc_code {
 }
 
 /// Representation of a pixel formats
-#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Facet, FacetEnumRepr, Eq, PartialEq)]
 #[repr(u32)]
 pub enum Format {
     /// \[23:0\] B:G:R little endian

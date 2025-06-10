@@ -1,22 +1,25 @@
+use core::fmt;
 use std::{
     cell::RefCell,
     convert::{TryFrom, TryInto},
+    io,
     rc::{Rc, Weak},
 };
 
-use num_enum::TryFromPrimitive;
+use facet_derive::Facet;
+use facet_enum_repr::FacetEnumRepr;
 
 use crate::{
     device::Inner,
-    object::{Object, Type as ObjectType},
-    raw::drm_mode_get_plane,
-    Device, Error, Format, Property, Result,
+    object::Object,
+    raw::{drm_mode_get_plane, drm_mode_object_type},
+    Device, Format, Property,
 };
 
 /// The [Plane] types
-#[derive(Debug, Eq, PartialEq, TryFromPrimitive)]
+#[derive(Debug, Eq, Facet, FacetEnumRepr, PartialEq)]
 #[repr(u32)]
-pub enum Type {
+pub enum drm_plane_type {
     /// The [Plane] is an overlay, aka a sprite. Any plane that is neither a primary nor a cursor
     /// plane
     Overlay = 0,
@@ -40,7 +43,7 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub(crate) fn new(device: &Device, id: u32) -> Result<Self> {
+    pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let mut formats = Vec::new();
         let raw_plane = drm_mode_get_plane(device, id, Some(&mut formats))?;
         let mut plane = Self {
@@ -118,11 +121,11 @@ impl Plane {
     ///     })
     ///     .unwrap();
     /// ```
-    pub fn properties(&self) -> Result<Vec<Property>> {
+    pub fn properties(&self) -> io::Result<Vec<Property>> {
         Object::properties(self)
     }
 
-    /// Returns the [Plane] [Type]
+    /// Returns the [Plane] [drm_plane_type]
     ///
     /// # Panics
     ///
@@ -141,7 +144,7 @@ impl Plane {
     ///     .unwrap();
     /// ```
     #[must_use]
-    pub fn plane_type(&self) -> Type {
+    pub fn plane_type(&self) -> drm_plane_type {
         let type_prop = self
             .properties()
             .unwrap()
@@ -153,21 +156,30 @@ impl Plane {
         // something that underflows or overflows an u32, we have a serious issue.
         let val: u32 = type_prop.value().try_into().unwrap();
 
-        Type::try_from(val).unwrap()
+        drm_plane_type::try_from(val).unwrap()
     }
 }
 
 impl Object for Plane {
-    fn device(&self) -> Result<Device> {
-        Ok(self.dev.upgrade().ok_or(Error::Empty)?.into())
+    fn device(&self) -> Device {
+        self.dev
+            .upgrade()
+            .expect("Couldn't upgrade our weak reference")
+            .into()
     }
 
     fn object_id(&self) -> u32 {
         self.id
     }
 
-    fn object_type(&self) -> ObjectType {
-        ObjectType::Plane
+    fn object_type(&self) -> drm_mode_object_type {
+        drm_mode_object_type::Plane
+    }
+}
+
+impl fmt::Display for Plane {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("plane-{}", self.id))
     }
 }
 

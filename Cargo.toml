@@ -10,15 +10,24 @@ keywords = ["linux", "graphics", "kms"]
 categories = ["api-bindings", "graphics", "os::linux-apis"]
 repository = "https://github.com/mripard/nucleid/"
 
+[build-dependencies]
+bindgen = { version = "0.71.1", default-features = false }
+
 [dependencies]
+bytemuck = { version = "1.23.0", default-features = false }
+facet = { version = "0.27.9", default-features = false }
+facet-derive = { version = "0.27.9", default-features = false }
+facet-enum-repr = { git = "https://github.com/mripard/dradis.git", rev = "fc77962a54f3f4a422e1e4acdfe8b6c41bdd07f5" }
 fixed = { version = "1.29.0", default-features = false }
-libc = { version = "0.2.172", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
-nix = { version = "0.30.1", default-features = false, features = ["ioctl"] }
-num_enum = { version = "0.7.3", features = ["complex-expressions"] }
-thiserror = { version = "2.0.12", default-features = false }
+rustix = { version = "1.0.7", default-features = false, features = ["std"] }
+tracing = { version = "0.1.41", default-features = false }
 
 [dev-dependencies]
 anyhow = { version = "1.0.98", default-features = false, features = ["std"] }
 clap = { version = "4.5.39", default-features = false, features = ["std"] }
-image = { version = "0.25.6", default-features = false, features = ["png", "jpeg", "webp"] }
+image = { version = "0.25.6", default-features = false, features = [
+    "png",
+    "jpeg",
+    "webp",
+] }

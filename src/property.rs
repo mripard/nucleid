@@ -1,4 +1,8 @@
-use crate::{raw::drm_mode_get_property, Device, Result};
+use std::{ffi::CStr, io};
+
+use bytemuck::cast_slice;
+
+use crate::{raw::drm_mode_get_property, Device};
 
 /// A KMS property
 #[derive(Debug)]
@@ -11,11 +15,14 @@ pub struct Property {
 }
 
 impl Property {
-    pub(crate) fn new(device: &Device, object_id: u32, id: u32, value: u64) -> Result<Self> {
+    pub(crate) fn new(device: &Device, object_id: u32, id: u32, value: u64) -> io::Result<Self> {
         let property = drm_mode_get_property(device, id)?;
-        let name = std::str::from_utf8(&property.name)?
-            .trim_end_matches(char::from(0))
-            .to_string();
+
+        let name = CStr::from_bytes_until_nul(cast_slice(&property.name))
+            .expect("The kernel guarantees the string is null-terminated.")
+            .to_str()
+            .expect("The kernel guarantees this is an ASCII.")
+            .to_owned();
 
         Ok(Self {
             object_id,
