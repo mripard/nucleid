@@ -11,7 +11,7 @@ categories = ["api-bindings", "graphics", "os::linux-apis"]
 repository = "https://github.com/mripard/nucleid/"
 
 [build-dependencies]
-bindgen = { version = "0.71.1", default-features = false }
+bindgen = { version = "0.72.0", default-features = false }
 
 [dependencies]
 bytemuck = { version = "1.23.0", default-features = false }
