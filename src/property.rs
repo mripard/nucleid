@@ -1,8 +1,9 @@
-use std::{ffi::CStr, io};
+use core::ffi::CStr;
+use std::io;
 
 use bytemuck::cast_slice;
 
-use crate::{raw::drm_mode_get_property, Device};
+use crate::{Device, raw::drm_mode_get_property};
 
 /// A KMS property
 #[derive(Debug)]
@@ -19,9 +20,19 @@ impl Property {
         let property = drm_mode_get_property(device, id)?;
 
         let name = CStr::from_bytes_until_nul(cast_slice(&property.name))
-            .expect("The kernel guarantees the string is null-terminated.")
+            .map_err(|_e| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "The kernel guarantees the string is null-terminated.",
+                )
+            })?
             .to_str()
-            .expect("The kernel guarantees this is an ASCII.")
+            .map_err(|_e| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "The kernel guarantees this is an ASCII.",
+                )
+            })?
             .to_owned();
 
         Ok(Self {
@@ -42,7 +53,7 @@ impl Property {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::Device;
+    /// use nucleid::{Device, Object as _};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
@@ -68,13 +79,13 @@ impl Property {
     /// # Example
     ///
     /// ```no_run
-    /// use nucleid::{Device, PlaneType};
+    /// use nucleid::{Device, Object as _, PlaneType};
     ///
     /// let device = Device::new("/dev/dri/card0").unwrap();
     ///
     /// let plane = device.planes()
     ///     .into_iter()
-    ///     .find(|plane| plane.plane_type() == PlaneType::Primary)
+    ///     .find(|plane| plane.plane_type().unwrap() == PlaneType::Primary)
     ///     .unwrap();
     ///
     /// let plane_type = plane

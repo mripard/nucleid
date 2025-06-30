@@ -1,11 +1,7 @@
-use std::convert::TryInto;
-use std::thread;
-use std::time;
+use std::{convert::TryInto, thread, time};
 
 use anyhow::{Context, Result};
-
 use clap::{Arg, ArgAction, Command};
-
 use nucleid::{
     BufferType, ConnectorStatus, ConnectorUpdate, Device, Format, Framebuffer, ObjectUpdate,
     PlaneType, PlaneUpdate,
@@ -53,7 +49,7 @@ fn main() -> Result<()> {
         .into_iter()
         .find(|plane| {
             plane.formats().any(|fmt| fmt == Format::XRGB8888)
-                && plane.plane_type() == PlaneType::Overlay
+                && plane.plane_type().unwrap() == PlaneType::Overlay
         })
         .context("Couldn't find a plane with the proper format")?;
 

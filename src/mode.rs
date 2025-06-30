@@ -1,21 +1,8 @@
-use core::fmt;
-use std::ffi::CStr;
+use core::{ffi::CStr, fmt};
 
 use bytemuck::cast_slice;
 
-use crate::raw::{bindgen, drm_mode_modeinfo};
-
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug)]
-pub enum drm_mode_type {
-    Builtin,
-    ClockC,
-    CrtcC,
-    Preferred,
-    Default,
-    UserDef,
-    Driver,
-}
+use crate::raw::{drm_mode_modeinfo, drm_mode_type};
 
 /// Display Mode
 ///
@@ -38,18 +25,9 @@ impl Mode {
         Self { name, inner: info }
     }
 
-    pub(crate) const fn has_type(&self, arg: drm_mode_type) -> bool {
+    pub(crate) fn has_type(&self, arg: drm_mode_type) -> bool {
         let mode_type = self.inner.type_;
-
-        let mask = match arg {
-            drm_mode_type::Builtin => bindgen::DRM_MODE_TYPE_BUILTIN,
-            drm_mode_type::ClockC => bindgen::DRM_MODE_TYPE_CLOCK_C,
-            drm_mode_type::CrtcC => bindgen::DRM_MODE_TYPE_CRTC_C,
-            drm_mode_type::Preferred => bindgen::DRM_MODE_TYPE_PREFERRED,
-            drm_mode_type::Default => bindgen::DRM_MODE_TYPE_DEFAULT,
-            drm_mode_type::UserDef => bindgen::DRM_MODE_TYPE_USERDEF,
-            drm_mode_type::Driver => bindgen::DRM_MODE_TYPE_DRIVER,
-        };
+        let mask = u32::from(arg);
 
         (mode_type & mask) == mask
     }

@@ -1,14 +1,14 @@
-use std::{
-    cell::RefCell,
-    io,
-    rc::{Rc, Weak},
-};
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::cell::RefCell;
+use std::io;
 
 use crate::{
+    Device,
     device::Inner,
     object::Object,
-    raw::{drm_mode_get_crtc, drm_mode_object_type},
-    Device,
+    raw::{drm_mode_crtc, drm_mode_get_crtc, drm_mode_object_type},
 };
 
 /// A KMS CRTC
@@ -25,7 +25,7 @@ pub struct Crtc {
 
 impl Crtc {
     pub(crate) fn new(device: &Device, id: u32, idx: usize) -> io::Result<Self> {
-        let _ = drm_mode_get_crtc(device, id)?;
+        let _: drm_mode_crtc = drm_mode_get_crtc(device, id)?;
 
         Ok(Self {
             dev: Rc::downgrade(&device.inner),

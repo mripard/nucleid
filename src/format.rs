@@ -1,11 +1,11 @@
-use std::convert::{TryFrom, TryInto};
+use core::convert::{TryFrom, TryInto as _};
 
 use facet_derive::Facet;
 use facet_enum_repr::FacetEnumRepr;
 
 macro_rules! fourcc_code {
     ($a:expr, $b:expr, $c:expr, $d:expr) => {
-        (($a as u32) | (($b as u32) << 8) | (($c as u32) << 16) | (($d as u32) << 24)) as u32
+        (($a as u32) | (($b as u32) << 8) | (($c as u32) << 16) | (($d as u32) << 24))
     };
 }
 

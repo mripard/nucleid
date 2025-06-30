@@ -1,18 +1,19 @@
-use core::fmt;
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    io,
-    rc::{Rc, Weak},
-};
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::{cell::RefCell, fmt};
+use std::{collections::HashMap, io};
 
 use fixed::types::U16F16;
 use tracing::{debug, trace};
 
 use crate::{
-    buffer::Framebuffer, device::Inner, encoder::Encoder, object::Object,
-    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device, Mode,
-    Plane,
+    Connector, Crtc, Device, Mode, Plane,
+    buffer::Framebuffer,
+    device::Inner,
+    encoder::Encoder,
+    object::Object as _,
+    raw::{drm_mode_atomic_commit, drm_mode_create_property_blob},
 };
 
 /// Display Pipeline Output Abstraction
@@ -153,7 +154,7 @@ pub struct Planes(Vec<Rc<Plane>>);
 
 impl IntoIterator for Planes {
     type Item = Rc<Plane>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -293,6 +294,7 @@ impl Update {
     ///     .commit()
     ///     .unwrap();
     /// ```
+    #[expect(clippy::too_many_lines, reason = "It's hard, ok?!")]
     pub fn commit(self) -> io::Result<Output> {
         debug!("Starting atomic commit.");
 
@@ -300,14 +302,18 @@ impl Update {
             .output
             .dev
             .upgrade()
-            .expect("Couldn't upgrade our weak reference")
+            .ok_or(io::Error::other("Couldn't upgrade our weak reference"))?
             .into();
 
         let mut properties = Vec::new();
         let crtc_object_id = self.output.crtc.object_id();
 
         for plane in self.planes {
-            let crtc_prop_id = plane.plane.property_id("CRTC_ID")?.unwrap();
+            let crtc_prop_id = plane.plane.property_id("CRTC_ID")?.ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Plane doesn't have a CRTC_ID property",
+            ))?;
+
             properties.push((
                 plane.plane.object_id(),
                 crtc_prop_id,
@@ -324,17 +330,39 @@ impl Update {
             }
         }
 
-        let active_prop_id = self.output.crtc.property_id("ACTIVE")?.unwrap();
+        let active_prop_id = self
+            .output
+            .crtc
+            .property_id("ACTIVE")?
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "CRTC doesn't have an ACTIVE property",
+            ))?;
+
         properties.push((crtc_object_id, active_prop_id, 1));
 
         if let Some(mode) = self.mode {
             let mode_id = u64::from(drm_mode_create_property_blob(&device, mode.inner())?);
-            let mode_prop_id = self.output.crtc.property_id("MODE_ID")?.unwrap();
+            let mode_prop_id = self
+                .output
+                .crtc
+                .property_id("MODE_ID")?
+                .ok_or(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "CRTC doesn't have a MODE_ID property",
+                ))?;
             properties.push((crtc_object_id, mode_prop_id, mode_id));
         }
 
         if let Some(connector) = self.connector {
-            let crtc_prop_id = connector.connector.property_id("CRTC_ID")?.unwrap();
+            let crtc_prop_id =
+                connector
+                    .connector
+                    .property_id("CRTC_ID")?
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "Connector doesn't have a CRTC_ID property",
+                    ))?;
             properties.push((
                 connector.connector.object_id(),
                 crtc_prop_id,
@@ -486,10 +514,10 @@ impl ObjectUpdate for ConnectorUpdate {
     fn set_property(mut self, property: &str, val: u64) -> Self {
         trace!(
             "Connector {}: Adding property {property}, value {val}",
-            self.connector.to_string()
+            self.connector
         );
 
-        self.properties.insert(property.to_string(), val);
+        self.properties.insert(property.to_owned(), val);
         self
     }
 }
@@ -843,7 +871,7 @@ impl PlaneUpdate {
     /// ```
     #[must_use]
     pub fn set_property(mut self, property: &str, val: u64) -> Self {
-        self.properties.insert(property.to_string(), val);
+        self.properties.insert(property.to_owned(), val);
         self
     }
 }

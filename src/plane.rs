@@ -1,25 +1,27 @@
-use core::fmt;
-use std::{
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::{
     cell::RefCell,
-    convert::{TryFrom, TryInto},
-    io,
-    rc::{Rc, Weak},
+    convert::{TryFrom, TryInto as _},
+    fmt,
 };
+use std::io;
 
 use facet_derive::Facet;
 use facet_enum_repr::FacetEnumRepr;
 
 use crate::{
+    Device, Format,
     device::Inner,
     object::Object,
     raw::{drm_mode_get_plane, drm_mode_object_type},
-    Device, Format, Property,
 };
 
 /// The [Plane] types
 #[derive(Debug, Eq, Facet, FacetEnumRepr, PartialEq)]
 #[repr(u32)]
-pub enum drm_plane_type {
+pub enum PlaneType {
     /// The [Plane] is an overlay, aka a sprite. Any plane that is neither a primary nor a cursor
     /// plane
     Overlay = 0,
@@ -54,13 +56,9 @@ impl Plane {
         };
 
         for raw_fmt in formats {
-            let fmt = Format::try_from(raw_fmt);
-
-            if fmt.is_err() {
-                continue;
+            if let Ok(fmt) = Format::try_from(raw_fmt) {
+                plane.formats.push(fmt);
             }
-
-            plane.formats.push(fmt.unwrap());
         }
 
         Ok(plane)
@@ -96,35 +94,6 @@ impl Plane {
         }
     }
 
-    /// Returns a list of the [Properties](Property) available
-    ///
-    /// # Errors
-    ///
-    /// If the [Device] can't be accessed or if the ioctl fails.
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// use nucleid::Device;
-    ///
-    /// let device = Device::new("/dev/dri/card0").unwrap();
-    ///
-    /// let plane = device.planes()
-    ///     .into_iter()
-    ///     .find(|plane| {
-    ///         plane
-    ///             .properties()
-    ///             .unwrap()
-    ///             .into_iter()
-    ///             .find(|prop| prop.name() == "COLOR_RANGE")
-    ///             .is_some()
-    ///     })
-    ///     .unwrap();
-    /// ```
-    pub fn properties(&self) -> io::Result<Vec<Property>> {
-        Object::properties(self)
-    }
-
     /// Returns the [Plane] type
     ///
     /// # Panics
@@ -140,23 +109,40 @@ impl Plane {
     ///
     /// let plane = device.planes()
     ///     .into_iter()
-    ///     .find(|plane| plane.plane_type() == PlaneType::Primary)
+    ///     .find(|plane| plane.plane_type().unwrap() == PlaneType::Primary)
     ///     .unwrap();
     /// ```
-    #[must_use]
-    pub fn plane_type(&self) -> drm_plane_type {
+    pub fn plane_type(&self) -> io::Result<PlaneType> {
         let type_prop = self
             .properties()
-            .unwrap()
+            .map_err(|_e| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "The kernel guarantees the string is null-terminated.",
+                )
+            })?
             .into_iter()
             .find(|prop| prop.name() == "type")
-            .unwrap();
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Plane Missing a type property",
+            ))?;
 
         // NOTE: the plane type returned by the kernel is an enum between 0 and 2. If we have
         // something that underflows or overflows an u32, we have a serious issue.
-        let val: u32 = type_prop.value().try_into().unwrap();
+        let val: u32 = type_prop.value().try_into().map_err(|_e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Unexpected Value returned by the kernel.",
+            )
+        })?;
 
-        drm_plane_type::try_from(val).unwrap()
+        PlaneType::try_from(val).map_err(|_e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Unexpected Plane Type returned by the kernel.",
+            )
+        })
     }
 }
 
@@ -185,7 +171,7 @@ impl fmt::Display for Plane {
 
 #[derive(Debug)]
 pub struct Formats<'a> {
-    iter: std::slice::Iter<'a, Format>,
+    iter: core::slice::Iter<'a, Format>,
 }
 
 impl Iterator for Formats<'_> {
