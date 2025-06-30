@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -133,6 +134,17 @@ impl Output {
             connector: None,
             planes: Vec::new(),
         }
+    }
+}
+
+impl fmt::Display for Output {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!(
+            "crtc ({}) -> encoder ({}) -> connector ({})",
+            self.crtc.object_id(),
+            self.encoder.id(),
+            self.connector.object_id(),
+        ))
     }
 }
 
