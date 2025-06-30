@@ -3,7 +3,7 @@ use std::io;
 
 use bytemuck::cast_slice;
 
-use crate::{raw::drm_mode_get_property, Device};
+use crate::{Device, raw::drm_mode_get_property};
 
 /// A KMS property
 #[derive(Debug)]

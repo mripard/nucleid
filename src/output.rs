@@ -8,9 +8,12 @@ use fixed::types::U16F16;
 use tracing::{debug, trace};
 
 use crate::{
-    buffer::Framebuffer, device::Inner, encoder::Encoder, object::Object as _,
-    raw::drm_mode_atomic_commit, raw::drm_mode_create_property_blob, Connector, Crtc, Device, Mode,
-    Plane,
+    Connector, Crtc, Device, Mode, Plane,
+    buffer::Framebuffer,
+    device::Inner,
+    encoder::Encoder,
+    object::Object as _,
+    raw::{drm_mode_atomic_commit, drm_mode_create_property_blob},
 };
 
 /// Display Pipeline Output Abstraction

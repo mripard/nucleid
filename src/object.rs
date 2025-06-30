@@ -1,8 +1,8 @@
 use std::io;
 
 use crate::{
-    raw::{drm_mode_get_properties, drm_mode_object_type},
     Device, Property,
+    raw::{drm_mode_get_properties, drm_mode_object_type},
 };
 
 /// A KMS Object

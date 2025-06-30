@@ -1,11 +1,7 @@
-use std::convert::TryInto;
-use std::thread;
-use std::time;
+use std::{convert::TryInto, thread, time};
 
 use anyhow::{Context, Result};
-
 use clap::{Arg, ArgAction, Command};
-
 use nucleid::{
     BufferType, ConnectorStatus, ConnectorUpdate, Device, Format, Framebuffer, ObjectUpdate,
     PlaneType, PlaneUpdate,

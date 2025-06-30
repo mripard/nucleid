@@ -2,10 +2,10 @@
 #![allow(unsafe_code)]
 #![allow(clippy::undocumented_unsafe_blocks)]
 
-use core::fmt;
 use core::{
     convert::{TryFrom, TryInto as _},
     ffi::c_uint,
+    fmt,
 };
 use std::{
     io,
@@ -16,7 +16,7 @@ use facet::Facet;
 use facet_enum_repr::FacetEnumRepr;
 use rustix::{
     io::Errno,
-    ioctl::{ioctl, opcode, Setter, Updater},
+    ioctl::{Setter, Updater, ioctl, opcode},
 };
 
 use crate::raw::bindgen::DRM_IOCTL_BASE;

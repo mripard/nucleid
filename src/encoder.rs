@@ -5,9 +5,9 @@ use core::{cell::RefCell, convert::TryFrom as _};
 use std::io;
 
 use crate::{
+    Crtc, Device,
     device::Inner,
     raw::{drm_mode_encoder_type, drm_mode_get_encoder},
-    Crtc, Device,
 };
 
 #[derive(Debug)]

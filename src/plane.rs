@@ -12,10 +12,10 @@ use facet_derive::Facet;
 use facet_enum_repr::FacetEnumRepr;
 
 use crate::{
+    Device, Format,
     device::Inner,
     object::Object,
     raw::{drm_mode_get_plane, drm_mode_object_type},
-    Device, Format,
 };
 
 /// The [Plane] types

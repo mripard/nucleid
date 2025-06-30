@@ -10,9 +10,9 @@ use std::{
 };
 
 use crate::{
+    Buffer, BufferType, Connector, Crtc, Output, Plane,
     encoder::Encoder,
     raw::{drm_mode_get_planes, drm_mode_get_resources, drm_set_client_capability},
-    Buffer, BufferType, Connector, Crtc, Output, Plane,
 };
 
 #[allow(dead_code)]

@@ -12,12 +12,12 @@ use std::io;
 use memmap::{MmapMut, MmapOptions};
 
 use crate::{
+    Device, Format,
     device::Inner,
     raw::{
         drm_mode_add_framebuffer, drm_mode_create_dumb_buffer, drm_mode_destroy_dumb_buffer,
         drm_mode_map_dumb_buffer, drm_mode_remove_framebuffer,
     },
-    Device, Format,
 };
 
 /// A DRM Buffer Type

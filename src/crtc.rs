@@ -5,10 +5,10 @@ use core::cell::RefCell;
 use std::io;
 
 use crate::{
+    Device,
     device::Inner,
     object::Object,
     raw::{drm_mode_crtc, drm_mode_get_crtc, drm_mode_object_type},
-    Device,
 };
 
 /// A KMS CRTC

@@ -5,6 +5,7 @@ use core::{cell::RefCell, convert::TryFrom as _, fmt};
 use std::io;
 
 use crate::{
+    Device, Mode,
     device::Inner,
     encoder::Encoder,
     object::Object,
@@ -12,7 +13,6 @@ use crate::{
         drm_connector_status, drm_mode_connector_type, drm_mode_get_connector,
         drm_mode_object_type, drm_mode_type as ModeType,
     },
-    Device, Mode,
 };
 
 /// A Display Sink Connector
