@@ -9,10 +9,10 @@ use std::{
 use crate::{
     device::Inner,
     encoder::Encoder,
-    mode::drm_mode_type as ModeType,
     object::Object,
     raw::{
-        drm_connector_status, drm_mode_connector_type, drm_mode_get_connector, drm_mode_object_type,
+        drm_connector_status, drm_mode_connector_type, drm_mode_get_connector,
+        drm_mode_object_type, drm_mode_type as ModeType,
     },
     Device, Mode,
 };

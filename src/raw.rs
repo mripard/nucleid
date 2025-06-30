@@ -35,6 +35,20 @@ pub(crate) use bindgen::{
     drm_mode_modeinfo, drm_mode_obj_get_properties, drm_set_client_cap,
 };
 
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Facet, FacetEnumRepr)]
+pub enum drm_mode_type {
+    Builtin = bindgen::DRM_MODE_TYPE_BUILTIN,
+    #[deprecated]
+    ClockC = bindgen::DRM_MODE_TYPE_CLOCK_C,
+    #[deprecated]
+    CrtcC = bindgen::DRM_MODE_TYPE_CRTC_C,
+    Preferred = bindgen::DRM_MODE_TYPE_PREFERRED,
+    Default = bindgen::DRM_MODE_TYPE_DEFAULT,
+    UserDef = bindgen:: DRM_MODE_TYPE_USERDEF,
+    Driver = bindgen::DRM_MODE_TYPE_DRIVER,
+}
+
 #[allow(dead_code)]
 #[derive(Debug)]
 #[repr(u32)]

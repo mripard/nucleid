@@ -46,3 +46,4 @@ pub use crate::plane::Plane;
 pub use crate::property::Property;
 pub use crate::raw::drm_connector_status as ConnectorStatus;
 pub use crate::raw::drm_mode_connector_type as ConnectorType;
+pub use crate::raw::drm_mode_type as ModeType;
