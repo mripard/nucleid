@@ -16,11 +16,31 @@ pub trait Object {
     /// Returns the [Object] type
     fn object_type(&self) -> drm_mode_object_type;
 
-    /// Returns a list of [Property] attached to that object.
+    /// Returns a list of the [Properties](Property) available
     ///
     /// # Errors
     ///
-    /// If there's an I/O Error while accessing the [Device] file descriptor
+    /// If the [Device] can't be accessed or if the ioctl fails.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use nucleid::{Device, Object as _};
+    ///
+    /// let device = Device::new("/dev/dri/card0").unwrap();
+    ///
+    /// let plane = device.planes()
+    ///     .into_iter()
+    ///     .find(|plane| {
+    ///         plane
+    ///             .properties()
+    ///             .unwrap()
+    ///             .into_iter()
+    ///             .find(|prop| prop.name() == "COLOR_RANGE")
+    ///             .is_some()
+    ///     })
+    ///     .unwrap();
+    /// ```
     fn properties(&self) -> io::Result<Vec<Property>> {
         let dev = self.device();
         let object_id = self.object_id();

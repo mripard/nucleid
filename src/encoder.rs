@@ -1,9 +1,8 @@
-use std::{
-    cell::RefCell,
-    convert::TryFrom,
-    io,
-    rc::{Rc, Weak},
-};
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::{cell::RefCell, convert::TryFrom as _};
+use std::io;
 
 use crate::{
     device::Inner,
@@ -24,7 +23,12 @@ pub struct Encoder {
 impl Encoder {
     pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let encoder = drm_mode_get_encoder(device, id)?;
-        let encoder_type = drm_mode_encoder_type::try_from(encoder.encoder_type).unwrap();
+        let encoder_type = drm_mode_encoder_type::try_from(encoder.encoder_type).map_err(|_e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Unexpected Encoder Type Returned by the kernel",
+            )
+        })?;
 
         Ok(Self {
             dev: Rc::downgrade(&device.inner),
@@ -35,10 +39,12 @@ impl Encoder {
         })
     }
 
+    #[must_use]
     pub const fn id(&self) -> u32 {
         self.id
     }
 
+    #[must_use]
     pub fn crtcs(self: &Rc<Self>) -> Crtcs {
         let device: Device = self
             .dev
@@ -67,7 +73,7 @@ pub struct Crtcs(Vec<Rc<Crtc>>);
 
 impl IntoIterator for Crtcs {
     type Item = Rc<Crtc>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

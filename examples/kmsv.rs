@@ -53,7 +53,7 @@ fn main() -> Result<()> {
         .into_iter()
         .find(|plane| {
             plane.formats().any(|fmt| fmt == Format::XRGB8888)
-                && plane.plane_type() == PlaneType::Overlay
+                && plane.plane_type().unwrap() == PlaneType::Overlay
         })
         .context("Couldn't find a plane with the proper format")?;
 

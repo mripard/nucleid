@@ -1,6 +1,13 @@
-use std::{
-    convert::{TryFrom, TryInto},
+#![allow(non_camel_case_types)]
+#![allow(unsafe_code)]
+#![allow(clippy::undocumented_unsafe_blocks)]
+
+use core::fmt;
+use core::{
+    convert::{TryFrom, TryInto as _},
     ffi::c_uint,
+};
+use std::{
     io,
     os::fd::{AsFd, BorrowedFd},
 };
@@ -21,9 +28,14 @@ pub(crate) mod bindgen {
     #![allow(non_upper_case_globals)]
     #![allow(non_camel_case_types)]
     #![allow(non_snake_case)]
+    #![allow(clippy::std_instead_of_core)]
+    #![allow(unreachable_pub)]
     #![allow(unsafe_code)]
     #![allow(unused_imports)]
+    #![allow(clippy::decimal_literal_representation)]
+    #![allow(clippy::multiple_unsafe_ops_per_block)]
     #![allow(clippy::struct_field_names)]
+    #![allow(clippy::unreadable_literal)]
 
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
@@ -45,12 +57,12 @@ pub enum drm_mode_type {
     CrtcC = bindgen::DRM_MODE_TYPE_CRTC_C,
     Preferred = bindgen::DRM_MODE_TYPE_PREFERRED,
     Default = bindgen::DRM_MODE_TYPE_DEFAULT,
-    UserDef = bindgen:: DRM_MODE_TYPE_USERDEF,
+    UserDef = bindgen::DRM_MODE_TYPE_USERDEF,
     Driver = bindgen::DRM_MODE_TYPE_DRIVER,
 }
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Facet, FacetEnumRepr)]
 #[repr(u32)]
 pub enum drm_mode_object_type {
     Any = bindgen::DRM_MODE_OBJECT_ANY,
@@ -145,8 +157,8 @@ pub enum drm_mode_connector_type {
     SPI = bindgen::DRM_MODE_CONNECTOR_SPI,
 }
 
-impl std::fmt::Display for drm_mode_connector_type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for drm_mode_connector_type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Component => write!(f, "Component"),
             Self::Composite => write!(f, "Composite"),
@@ -435,10 +447,10 @@ pub fn drm_mode_create_property_blob<T: Sized>(raw: &impl AsFd, data: &T) -> io:
     drm_ioctl_mode_createpropblob(
         raw.as_fd(),
         drm_mode_create_blob {
-            length: std::mem::size_of::<T>()
+            length: size_of::<T>()
                 .try_into()
                 .map_err(|_e| io::Error::new(io::ErrorKind::InvalidInput, "Blob is too large"))?,
-            data: std::ptr::from_ref::<T>(data) as u64,
+            data: core::ptr::from_ref::<T>(data) as u64,
             ..drm_mode_create_blob::default()
         },
     )

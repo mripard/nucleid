@@ -1,10 +1,8 @@
-use core::fmt;
-use std::{
-    cell::RefCell,
-    convert::TryFrom,
-    io,
-    rc::{Rc, Weak},
-};
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::{cell::RefCell, convert::TryFrom as _, fmt};
+use std::io;
 
 use crate::{
     device::Inner,
@@ -38,7 +36,7 @@ pub struct Modes(Vec<Mode>);
 
 impl IntoIterator for Modes {
     type Item = Mode;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -49,7 +47,13 @@ impl Connector {
     pub(crate) fn new(device: &Device, id: u32) -> io::Result<Self> {
         let mut encoder_ids = Vec::new();
         let connector = drm_mode_get_connector(device, id, None, Some(&mut encoder_ids))?;
-        let con_type = drm_mode_connector_type::try_from(connector.connector_type).unwrap();
+        let con_type =
+            drm_mode_connector_type::try_from(connector.connector_type).map_err(|_e| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Unexpected Connector Type Returned by the kernel",
+                )
+            })?;
 
         Ok(Self {
             dev: Rc::downgrade(&device.inner),
@@ -93,11 +97,12 @@ impl Connector {
         let device: Device = self
             .dev
             .upgrade()
-            .expect("Couldn't upgrade our weak reference")
+            .ok_or(io::Error::other("Couldn't upgrade our weak reference"))?
             .into();
 
         let mut raw_modes = Vec::new();
-        let _ = drm_mode_get_connector(&device, self.id, Some(&mut raw_modes), None)?;
+        let _: drm_mode_get_connector =
+            drm_mode_get_connector(&device, self.id, Some(&mut raw_modes), None)?;
 
         let mut modes = Vec::with_capacity(raw_modes.len());
         for mode in &raw_modes {
@@ -162,12 +167,17 @@ impl Connector {
         let device: Device = self
             .dev
             .upgrade()
-            .expect("Couldn't upgrade our weak reference")
+            .ok_or(io::Error::other("Couldn't upgrade our weak reference"))?
             .into();
 
         let connector = drm_mode_get_connector(&device, self.id, None, None)?;
 
-        Ok(drm_connector_status::try_from(connector.connection).unwrap())
+        drm_connector_status::try_from(connector.connection).map_err(|_e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Unexpected Connector Status Returned by the kernel",
+            )
+        })
     }
 
     /// Returns the [Connector] type
@@ -257,11 +267,11 @@ impl fmt::Display for Connector {
 }
 
 #[derive(Debug)]
-pub struct Encoders(Vec<Rc<Encoder>>);
+pub(crate) struct Encoders(Vec<Rc<Encoder>>);
 
 impl IntoIterator for Encoders {
     type Item = Rc<Encoder>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

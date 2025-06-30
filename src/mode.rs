@@ -1,5 +1,4 @@
-use core::fmt;
-use std::ffi::CStr;
+use core::{ffi::CStr, fmt};
 
 use bytemuck::cast_slice;
 

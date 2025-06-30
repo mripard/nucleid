@@ -1,9 +1,13 @@
-use std::{
+extern crate alloc;
+
+use alloc::rc::{Rc, Weak};
+use core::{
     cell::RefCell,
-    convert::TryInto,
-    io,
-    rc::{Rc, Weak},
+    convert::TryInto as _,
+    fmt,
+    ops::{Deref, DerefMut},
 };
+use std::io;
 
 use memmap::{MmapMut, MmapOptions};
 
@@ -44,11 +48,14 @@ impl Buffer {
         let dumb = drm_mode_create_dumb_buffer(device, width, height, bpp)?;
         let map = drm_mode_map_dumb_buffer(device, dumb.handle)?;
 
-        // NOTE: dumb.size is a u64, and usize will be a u32 on 32-bits platforms. However, a size
-        // larger than 32-bits on those platforms wouldn't make sense, so let's panic if we
-        // encounter it.
-        let size = dumb.size.try_into().unwrap();
+        let size = dumb
+            .size
+            .try_into()
+            .map_err(|_e| io::Error::new(io::ErrorKind::FileTooLarge, "Buffer is too large."))?;
 
+        // SAFETY: MMapOptions::map_mut() is considered unsafe because the underlying file might
+        // be modified. Our buffer isn't backed by a file though, so we're good.
+        #[expect(unsafe_code, reason = "We can't really avoid it, can we?")]
         let map = unsafe {
             MmapOptions::new()
                 .len(size)
@@ -216,7 +223,7 @@ impl Buffer {
         let device: Device = self
             .dev
             .upgrade()
-            .expect("Couldn't upgrade our weak reference")
+            .ok_or(io::Error::other("Couldn't upgrade our weak reference"))?
             .into();
 
         let id = drm_mode_add_framebuffer(
@@ -248,8 +255,8 @@ impl Drop for Buffer {
     }
 }
 
-impl std::fmt::Debug for Buffer {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for Buffer {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("Buffer")
             .field("handle", &self.handle)
             .field("width", &self.width)
@@ -278,7 +285,7 @@ impl Framebuffer {
     }
 }
 
-impl std::ops::Deref for Framebuffer {
+impl Deref for Framebuffer {
     type Target = Buffer;
 
     fn deref(&self) -> &Self::Target {
@@ -286,7 +293,7 @@ impl std::ops::Deref for Framebuffer {
     }
 }
 
-impl std::ops::DerefMut for Framebuffer {
+impl DerefMut for Framebuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.buffer
     }

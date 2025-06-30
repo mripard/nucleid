@@ -1,10 +1,12 @@
+extern crate alloc;
+
+use alloc::rc::Rc;
+use core::cell::{Ref, RefCell};
 use std::{
-    cell::{Ref, RefCell},
     fs::OpenOptions,
     io,
     os::fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd},
     path::Path,
-    rc::Rc,
 };
 
 use crate::{
@@ -68,7 +70,7 @@ impl Iterator for Crtcs<'_> {
 }
 
 #[derive(Debug)]
-pub struct Encoders<'a> {
+pub(crate) struct Encoders<'a> {
     inner: Ref<'a, Inner>,
     count: usize,
 }
@@ -325,12 +327,18 @@ impl Device {
 
 impl AsFd for Device {
     fn as_fd(&self) -> BorrowedFd<'_> {
+        #[expect(
+            unsafe_code,
+            reason = "The borrow doesn't last long enough for the BorrowedFd to be ok, even though it's ok."
+        )]
         // SAFETY: We know that we will have the fd opened for at least as long as Device.
-        unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
+        unsafe {
+            BorrowedFd::borrow_raw(self.as_raw_fd())
+        }
     }
 }
 
-impl std::os::unix::io::AsRawFd for Device {
+impl AsRawFd for Device {
     fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
         self.inner.borrow().file.as_raw_fd()
     }
