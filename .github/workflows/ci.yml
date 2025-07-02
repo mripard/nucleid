@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      checks: write
+      pull-requests: write
 
     steps:
       - name: Install Dependencies
@@ -56,6 +56,9 @@ jobs:
   format:
     name: Rustfmt
     runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v2
