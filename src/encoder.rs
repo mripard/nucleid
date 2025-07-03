@@ -5,7 +5,7 @@ use core::{cell::RefCell, convert::TryFrom as _};
 use std::io;
 
 use crate::{
-    Crtc, Device,
+    Crtc, Device, Object as _,
     device::Inner,
     raw::{drm_mode_encoder_type, drm_mode_get_encoder},
 };
@@ -65,6 +65,14 @@ impl Encoder {
             .collect();
 
         Crtcs(crtcs)
+    }
+
+    /// Returns a CRTC with an `object_id` equal to `crtc_id`
+    #[must_use]
+    pub fn crtc_with_id(self: &Rc<Self>, crtc_id: u32) -> Option<Rc<Crtc>> {
+        self.crtcs()
+            .into_iter()
+            .find(|crtc| crtc.object_id() == crtc_id)
     }
 }
 

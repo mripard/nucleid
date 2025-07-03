@@ -10,7 +10,7 @@ use std::{
 };
 
 use crate::{
-    Buffer, BufferType, Connector, Crtc, Output, Plane,
+    Buffer, BufferType, Connector, Crtc, Object as _, Output, Plane,
     encoder::Encoder,
     raw::{drm_mode_get_planes, drm_mode_get_resources, drm_set_client_capability},
 };
@@ -306,6 +306,10 @@ impl Device {
     ///
     /// let output = device.output_from_connector(&connector).unwrap();
     /// ```
+    #[expect(
+        clippy::unwrap_in_result,
+        reason = "There's no way a CRTC ID doesn't fit into a u32."
+    )]
     pub fn output_from_connector(&self, connector: &Rc<Connector>) -> io::Result<Output> {
         let encoder = connector
             .encoders()
@@ -316,10 +320,19 @@ impl Device {
                 "Couldn't find an encoder for that connector.",
             ))?;
 
-        let crtc = encoder.crtcs().into_iter().next().ok_or(io::Error::new(
-            io::ErrorKind::NotFound,
-            "Couldn't find a CRTC for that connector.",
-        ))?;
+        let crtc = connector
+            .property("CRTC_ID")?
+            .map(|id| id.value())
+            .map(|id| u32::try_from(id).expect("We cannot have more than 32 CRTCs"))
+            .filter(|id| *id > 0)
+            .map_or_else(
+                || encoder.crtcs().into_iter().next(),
+                |id| encoder.crtc_with_id(id),
+            )
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Couldn't find a CRTC for that connector.",
+            ))?;
 
         Ok(Output::new(self, &crtc, &encoder, connector))
     }
