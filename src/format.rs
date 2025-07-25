@@ -1,7 +1,7 @@
 use core::convert::{TryFrom, TryInto as _};
 
-use facet_derive::Facet;
 use facet_enum_repr::FacetEnumRepr;
+use facet_macros::Facet;
 
 macro_rules! fourcc_code {
     ($a:expr, $b:expr, $c:expr, $d:expr) => {
