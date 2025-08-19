@@ -8,8 +8,8 @@ use core::{
 };
 use std::io;
 
-use facet_derive::Facet;
 use facet_enum_repr::FacetEnumRepr;
+use facet_macros::Facet;
 
 use crate::{
     Device, Format,
