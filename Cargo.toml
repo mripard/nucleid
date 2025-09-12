@@ -17,7 +17,7 @@ bindgen = { version = "0.72.0", default-features = false }
 bytemuck = { version = "1.23.0", default-features = false }
 facet = { version = "0.28.0", default-features = false }
 facet-enum-repr = { git = "https://github.com/mripard/dradis.git", rev = "6e9e423074e733c5a254f6ae868e633e03fc29ec" }
-facet-macros = { version = "0.28.0", default-features = false }
+facet-macros = { version = "0.29.0", default-features = false }
 fixed = { version = "1.29.0", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
 rustix = { version = "1.0.7", default-features = false, features = ["std"] }
