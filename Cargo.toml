@@ -15,7 +15,7 @@ bindgen = { version = "0.72.0", default-features = false }
 
 [dependencies]
 bytemuck = { version = "1.23.0", default-features = false }
-facet = { version = "0.31.8", default-features = false }
+facet = { version = "0.32.2", default-features = false }
 facet-enum-repr = { git = "https://github.com/mripard/facet-enum-repr.git", rev = "facet-enum-repr-v0.5.4" }
 facet-macros = { version = "0.31.8", default-features = false }
 fixed = { version = "1.29.0", default-features = false }
