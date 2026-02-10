@@ -15,9 +15,9 @@ bindgen = { version = "0.72.0", default-features = false }
 
 [dependencies]
 bytemuck = { version = "1.23.0", default-features = false }
-facet = { version = "0.41.0", default-features = false, features = ["alloc"] }
-facet-enum-repr = { git = "https://github.com/mripard/facet-enum-repr.git", rev = "6219a3c395e8ee0a6234e7a43f68f10ac840eb18" }
-facet-macros = { version = "0.41.0", default-features = false }
+facet = { version = "0.43.2", default-features = false, features = ["alloc"] }
+facet-enum-repr = { git = "https://github.com/mripard/facet-enum-repr.git", rev = "5639d64571647848d1516e3144789b7878478df7" }
+facet-macros = { version = "0.43.2", default-features = false }
 fixed = { version = "1.29.0", default-features = false }
 memmap = { package = "memmap2", version = "0.9.5" }
 rustix = { version = "1.0.7", default-features = false, features = ["std"] }
